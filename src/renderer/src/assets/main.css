@@ -1,0 +1,17 @@
+body { font-family: sans-serif; background: #121212; color: white; margin: 0; }
+.header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 10px 20px; background: #1e1e1e; border-bottom: 1px solid #333; 
+}
+.container { padding: 20px; max-width: 900px; margin: auto; }
+.topic-row {
+  display: flex; align-items: center; padding: 12px;
+  background: #1e1e1e; border-radius: 8px; margin-bottom: 8px;
+  transition: background 0.2s; cursor: pointer;
+}
+.topic-row:hover { background: #2a2a2a; }
+.topic-icon { font-size: 20px; margin-right: 15px; }
+.topic-info { flex-grow: 1; }
+.topic-title { font-weight: bold; display: block; margin-bottom: 4px; }
+.topic-meta { font-size: 0.85em; color: #aaa; }
+.topic-stats { text-align: right; font-size: 0.85em; color: #888; }
