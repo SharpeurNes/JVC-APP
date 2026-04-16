@@ -3,7 +3,7 @@ import TopicItem from '../components/TopicItem'
 
 export default function HomePage({ cache, setCache, onSelectTopic }) {
   // On gère l'URL actuelle. Par défaut : page 1
-  const [currentUrl, setCurrentUrl] = useState('https://www.jeuxvideo.com/forums/0-19163-0-1-0-1-0-league-of-legends.htm');
+  const [currentUrl, setCurrentUrl] = useState('https://www.jeuxvideo.com/forums/0-34008-0-1-0-1-0-lost-ark.htm');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
 

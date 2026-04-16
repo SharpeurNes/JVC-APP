@@ -68,9 +68,6 @@ class ForumScraper {
 
   async getTopicMessages(url) {
     try {
-      console.log("\n--- DEBUG SCRAPER START ---");
-      console.log(`URL ciblée: ${url}`);
-      
       const response = await net.fetch(url, {
         method: 'GET',
         headers: {
@@ -80,12 +77,12 @@ class ForumScraper {
       });
 
       const html = await response.text();
-      const $ = cheerio.load(html);
-      console.log(`HTML reçu (${html.length} chars)`);
-      
+      const $ = cheerio.load(html);      
       const messages = [];
       const messageNodes = $('.messageUser');
-      console.log(`Nombre de messages trouvés: ${messageNodes.length}`);
+
+      const hashCheck = $('input[name="ajax_hash_help"]').val() || $('input[name="hash_check"]').val();
+      const fsSessionId = $('input[name="fs_session_id"]').val();
 
       messageNodes.each((i, el) => {
         messages.push({
@@ -138,6 +135,15 @@ class ForumScraper {
         pagination: { current: 1, max: 1 } 
       };
     }
+  }
+
+
+
+
+
+  async getPrivatePage(url){
+    const response = await net.fetch(url);
+    const html = await response.text();
   }
 }
 

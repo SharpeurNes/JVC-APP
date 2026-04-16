@@ -13,6 +13,10 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('api', {
       fetchTopics: (url) => ipcRenderer.invoke('get-topics', url),
       getMessages: (url) => ipcRenderer.invoke('get-messages', url),
+      openLoginWindow: () => ipcRenderer.invoke('auth:open-login'),
+      onAuthSuccess: (callback) => ipcRenderer.on('auth:status-success', (event, data) => callback(data)),
+      logout: () => ipcRenderer.invoke('auth:logout'),
+      checkSession: () => ipcRenderer.invoke('auth:check-session'),
     })
   } catch (error) {
     console.error(error)

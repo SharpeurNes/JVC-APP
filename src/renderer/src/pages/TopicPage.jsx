@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import MessageItem from '../components/MessageItem'
 
-export default function TopicPage({ topic }) {
+export default function TopicPage({ topic, onBack }) {
   // On stocke l'URL actuelle du topic (qui changera quand on change de page)
   const [currentUrl, setCurrentUrl] = useState(`https://www.jeuxvideo.com${topic.url}`);
   const [data, setData] = useState({ messages: [], pagination: { current: 1, max: 1 } });
@@ -41,11 +41,27 @@ export default function TopicPage({ topic }) {
   const { messages, pagination } = data;
 
 return (
-  <main className="container">
-    {/* Header */}
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-      <h2 style={{ margin: 0 }}>{topic.title}</h2>
-      <button onClick={() => loadMessages(currentUrl)} disabled={loading}>🔄</button>
+  <main className="container" style={{ padding: '20px' }}>
+    {/* Barre d'outils spécifique au Topic */}
+    <div style={{ 
+      display: 'flex', 
+      justifyContent: 'space-between', 
+      alignItems: 'center', 
+      marginBottom: '20px',
+      background: '#25262b',
+      padding: '10px',
+      borderRadius: '8px'
+    }}>
+      <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#eee' }}>{topic.title}</h2>
+      
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {/* Bouton Retour déplacé ici */}
+        <button onClick={onBack} style={{ padding: '5px 12px', cursor: 'pointer' }}>⬅ Retour</button>
+        {/* Bouton Refresh */}
+        <button onClick={() => loadMessages(currentUrl)} disabled={loading} style={{ cursor: 'pointer' }}>
+          {loading ? '...' : '🔄'}
+        </button>
+      </div>
     </div>
 
     {/* PAGINATION HAUT */}
@@ -67,7 +83,7 @@ return (
       </div>
     )}
 
-    {/* PAGINATION BAS (Exactement la même !) */}
+    {/* PAGINATION BAS */}
     {!loading && (
       <PaginationBar 
         pagination={pagination} 

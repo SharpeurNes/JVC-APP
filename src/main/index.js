@@ -37,6 +37,46 @@ function createWindow() {
   }
 }
 
+// 1. Définir la fonction de la fenêtre de login
+// Fonction pour créer la fenêtre de login
+function createLoginWindow() {
+  const loginWin = new BrowserWindow({
+    width: 600,
+    height: 800,
+    autoHideMenuBar: true,
+    title: "Connexion Jeuxvideo.com"
+  })
+
+  loginWin.loadURL('https://www.jeuxvideo.com/login')
+
+  // On surveille la navigation pour fermer quand c'est fini
+  loginWin.webContents.on('did-navigate', async (event, url) => {
+    if (url === 'https://www.jeuxvideo.com/' || url.includes('profil')) {
+
+      //ON RECUPERE LE PSEUDO DEPUIS L'HTML DE JVC
+      const username = await loginWin.webContents.executeJavaScript(`
+        (function(){
+          const el = document.querySelector('.headerAccount__pseudo');
+          return el ? el.textContent.trim() : null;
+        })()
+        `);
+        if(username == "CONNEXION"){
+          console.log("Echec de la connexion !");
+        } else if(username){
+          console.log("Connecté en tant que :", username);
+          BrowserWindow.getAllWindows().forEach(win => {
+            if(win !== loginWin){
+              win.webContents.send('auth:status-success', { isConnected: true, username: username });
+            }
+          });
+        }
+      // Petit délai pour l'UX
+      setTimeout(() => {
+        if (!loginWin.isDestroyed()) loginWin.close()
+      }, 1500)
+    }
+  })
+}
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
@@ -54,8 +94,7 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
-
-  //SCRAPER AGENT
+    //SCRAPER AGENT
   const userAgent = session.defaultSession.getUserAgent();
   scraper.init(userAgent);
 
@@ -86,4 +125,39 @@ ipcMain.handle('get-topics', async (event, url) => {
 
 ipcMain.handle('get-messages', async (event, url) => {
   return await scraper.getTopicMessages(url);
+});
+
+ipcMain.handle('auth:open-login', () => {
+    createLoginWindow()
+});
+
+ipcMain.handle('auth:logout', async () => {
+  // On vide tous les cookies, le cache et les storages
+  await session.defaultSession.clearStorageData({
+    storages: ['cookies', 'localstorage', 'cache']
+  });
+  console.log("Session vidée avec succès");
+  return { success: true };
+});
+
+ipcMain.handle('auth:check-session', async () => {
+  // On crée une fenêtre invisible pour vérifier si on est co sur JVC
+  const tempWin = new BrowserWindow({ show: false });
+  await tempWin.loadURL('https://www.jeuxvideo.com/');
+  
+  const username = await tempWin.webContents.executeJavaScript(`
+    document.querySelector('.headerAccount__pseudo')?.innerText.trim() || null
+  `);
+  
+  tempWin.close();
+  
+  if (username) {
+    return { isConnected: true, username };
+  }
+  return { isConnected: false, username: null };
+});
+
+// Nouveau handler pour le login
+ipcMain.handle('login', async (event, { pseudo, password }) => {
+  return await scraper.login(pseudo, password);
 });
