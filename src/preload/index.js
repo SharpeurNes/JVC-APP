@@ -17,6 +17,7 @@ if (process.contextIsolated) {
       onAuthSuccess: (callback) => ipcRenderer.on('auth:status-success', (event, data) => callback(data)),
       logout: () => ipcRenderer.invoke('auth:logout'),
       checkSession: () => ipcRenderer.invoke('auth:check-session'),
+      sendNativePost: (data) => ipcRenderer.invoke('send-message', data),
     })
   } catch (error) {
     console.error(error)

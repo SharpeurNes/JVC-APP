@@ -23,7 +23,7 @@ function App() {
 
   const [topicsCache, setTopicsCache] = useState([]);
 
-  const [user, setUser] = useState({ isConnected: false, username: ''});
+  const [user, setUser] = useState({ isConnected: false, username: '' });
   const [loading, setLoading] = useState(true); // Pour éviter un flash du bouton connexion
 
   const handleLogout = async () => {
@@ -31,94 +31,93 @@ function App() {
     setUser({ isConnected: false, username: '' }); // Remet le bouton Connexion côté React
   };
 
+  // 1. Uniquement pour le lancement (Init de l'app)
   useEffect(() => {
-    window.api.onAuthSuccess((data) => {
-        setUser(data);
-        console.log("Bienvenue", data.username);
-    });
-
     const verifySession = async () => {
       const session = await window.api.checkSession();
-      if (session.isConnected) {
+      if (session.isConnected && session.username != "CONNEXION") {
         setUser(session);
       }
       setLoading(false);
     };
+    verifySession();
 
-    // On ne sauvegarde que si view est valide
+    window.api.onAuthSuccess((data) => {
+      setUser(data);
+      localStorage.setItem('jvc_pseudo', data.username);
+    });
+  }, []); // [] = s'exécute UNE SEULE FOIS au démarrage
+
+  // 2. Uniquement pour la sauvegarde de la vue
+  useEffect(() => {
     if (view && view.name) {
       localStorage.setItem('last_view', JSON.stringify(view));
     }
+  }, [view]); // S'exécute quand la vue change
 
-    verifySession();
-  }, [view]);
-
-if (loading) return <div style={{color: 'white'}}>Chargement...</div>;
+  if (loading) return <div style={{ color: 'white' }}>Chargement...</div>;
 
   return (
-  <div>
-<header className="header" style={{
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '10px 20px', backgroundColor: '#18191b', color: 'white', borderBottom: '1px solid #333'
-  }}>
-    <div className="logo" onClick={() => setView({ name: 'home', data: null })} style={{cursor: 'pointer'}}>
-      🚀 <b>JVC-APP</b>
-    </div>
-    
-    {/* Section Utilisateur à droite */}
-    <div className="user-section">
-    {user.isConnected ? (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '12px', color: '#888' }}>Connecté :</span>
-          <span style={{ color: '#ffca28', fontWeight: 'bold' }}>{user.username}</span>
+    <div>
+      {/* HEADER FIXE */}
+      <header className="app-header">
+        <div className="app-logo" onClick={() => setView({ name: 'home', data: null })} style={{ cursor: 'pointer' }}>
+          <div className="logo-mark">
+            <svg viewBox="0 0 16 16"><path d="M8 1L2 4v5c0 3.3 2.5 5.7 6 6.9 3.5-1.2 6-3.6 6-6.9V4L8 1z" /></svg>
+          </div>
+          <span className="app-name">JVC-APP</span>
         </div>
-        
-        {/* Bouton Déconnexion */}
-        <button 
-          onClick={handleLogout}
-          style={{ 
-            background: '#d32f2f', 
-            color: 'white', 
-            border: 'none', 
-            padding: '4px 8px', 
-            borderRadius: '4px', 
-            fontSize: '11px',
-            cursor: 'pointer',
-            textTransform: 'uppercase'
-          }}
-        >
-          Déconnexion
-        </button>
-      </div>
-    ) : (
-      <button 
-        onClick={() => window.api.openLoginWindow()} 
-        style={{ /* ton style actuel */ }}
-      >
-        Connexion
-      </button>
-    )}
-  </div>
-</header>
+        <nav className="app-nav">
+          <button className="nav-link active">Accueil</button>
+          <button className="nav-link">Catégories</button>
+          <button className="nav-link">Membres</button>
+        </nav>
+        <div className="user-zone">
 
-    {/* CONTENU DES PAGES */}
-    <div style={{ display: view.name === 'home' ? 'block' : 'none' }}>
-      <HomePage 
-          cache={topicsCache} 
-          setCache={setTopicsCache} 
-          onSelectTopic={(topic) => setView({ name: 'topic', data: topic })} 
+          {user.isConnected ? (
+            <div className="user-zone">
+              <div className="user-pill">
+                <div className="avatar-sm">MR</div>
+                <span>{user.username}</span>
+              </div>
+              <button className="btn-logout" title="Déconnexion" onClick={handleLogout}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+              </button>
+            </div>
+          ) : (
+            <div className="user-zone">
+              <button
+                onClick={() => window.api.openLoginWindow()}
+                className="btn-logout"
+              >
+                Connexion
+              </button>
+            </div>
+          )}
+
+
+        </div>
+      </header>
+
+      {/* CONTENU DES PAGES */}
+      <div style={{ display: view.name === 'home' ? 'block' : 'none' }}>
+        <HomePage
+          cache={topicsCache}
+          setCache={setTopicsCache}
+          onSelectTopic={(topic) => setView({ name: 'topic', data: topic })}
         />
-    </div>
+      </div>
 
-    {view.name === 'topic' && (
-      <TopicPage 
-        topic={view.data} 
-        onBack={() => setView({ name: 'home', data: null })} 
-      />
-    )}
-  </div>
-);
+      {/* AJOUT DE LA KEY ICI : c'est le fix magique */}
+      {view.name === 'topic' && view.data && (
+        <TopicPage
+          key={view.data.url} 
+          topic={view.data}
+          onBack={() => setView({ name: 'home', data: null })}
+        />
+      )}
+    </div>
+  );
 }
 
 export default App

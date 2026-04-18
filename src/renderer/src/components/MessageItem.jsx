@@ -1,28 +1,36 @@
+import '../pages/TopicPage.css';
+
+const icoCite = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>`;
+const icoBlock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`;
+const icoFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
+
+
+
 export default function MessageItem({ msg }) {
   return (
-    <div className="message-item" style={{ borderBottom: '1px solid #333', padding: '15px 0' }}>
-      <div style={{ display: 'flex', gap: '15px' }}>
-        {/* L'avatar de l'auteur */}
-        <img 
-          src={msg.avatar || 'https://www.jeuxvideo.com/img/default_avatar.png'} 
-          style={{ width: '50px', height: '50px', borderRadius: '4px' }}
-          alt="avatar"
-        />
-        
-        <div style={{ flex: 1 }}>
-          <div style={{ marginBottom: '5px' }}>
-            <b style={{ color: '#ff4500' }}>{msg.author}</b> 
-            <span style={{ fontSize: '0.8rem', color: '#888', marginLeft: '10px' }}>{msg.date}</span>
-          </div>
 
-          {/* ICI : Le contenu HTML avec les stickers */}
-          <div 
-            className="content-enrichi"
-            dangerouslySetInnerHTML={{ __html: msg.content }} 
-            style={{ lineHeight: '1.4' }}
-          />
+    <div className="msg">
+      <img className="avatar-md"
+        src={msg.avatar || 'https://www.jeuxvideo.com/img/default_avatar.png'}
+        alt="avatar"
+      />
+      <div className="msg-right">
+        <div className="msg-top">
+          <div className="msg-author-block">
+            <span className="msg-author">{msg.author}</span>
+            <span className="msg-date">{msg.date}</span>
+            {/* <span className="msg-num">#${msg.num}</span> */}
+          </div>
+          <div className="msg-tools">
+            <button className="tool-btn" title="Citer">C</button>
+            <button className="tool-btn danger" title="Bloquer">B</button>
+            <button className="tool-btn danger" title="Signaler">R</button>
+          </div>
         </div>
+        <div className="msg-body" dangerouslySetInnerHTML={{ __html: msg.content }} style={{ lineHeight: '1.4' }} />
+
       </div>
     </div>
-  );
+
+);
 }

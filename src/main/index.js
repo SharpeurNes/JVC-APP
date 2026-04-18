@@ -4,6 +4,10 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { scraper } from './services/scraper'
 
+const sessionConfig = {
+  partition: 'persist:jvc_session' // Utilise le même nom partout
+};
+
 function createWindow() {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -16,6 +20,7 @@ function createWindow() {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       webSecurity: true,
+      ...sessionConfig,
     }
   })
 
@@ -44,7 +49,10 @@ function createLoginWindow() {
     width: 600,
     height: 800,
     autoHideMenuBar: true,
-    title: "Connexion Jeuxvideo.com"
+    title: "Connexion Jeuxvideo.com",
+    webPreferences:{
+      ...sessionConfig,
+    }
   })
 
   loginWin.loadURL('https://www.jeuxvideo.com/login')
@@ -95,8 +103,8 @@ app.whenReady().then(() => {
   ipcMain.on('ping', () => console.log('pong'))
 
     //SCRAPER AGENT
-  const userAgent = session.defaultSession.getUserAgent();
-  scraper.init(userAgent);
+  //const userAgent = session.defaultSession.getUserAgent();
+  //scraper.init(userAgent);
 
   createWindow()
 
@@ -133,31 +141,67 @@ ipcMain.handle('auth:open-login', () => {
 
 ipcMain.handle('auth:logout', async () => {
   // On vide tous les cookies, le cache et les storages
-  await session.defaultSession.clearStorageData({
-    storages: ['cookies', 'localstorage', 'cache']
+  const ses = session.fromPartition('persist:jvc_session');
+  await ses.clearStorageData({
+    storages: ['cookies', 'localstorage', 'cache', 'serviceworkers']
   });
   console.log("Session vidée avec succès");
   return { success: true };
 });
 
+
+
+
 ipcMain.handle('auth:check-session', async () => {
-  // On crée une fenêtre invisible pour vérifier si on est co sur JVC
-  const tempWin = new BrowserWindow({ show: false });
-  await tempWin.loadURL('https://www.jeuxvideo.com/');
-  
-  const username = await tempWin.webContents.executeJavaScript(`
-    document.querySelector('.headerAccount__pseudo')?.innerText.trim() || null
-  `);
-  
-  tempWin.close();
-  
-  if (username) {
-    return { isConnected: true, username };
+  // 1. On crée la fenêtre dans la MÊME partition que le reste de l'app
+  const tempWin = new BrowserWindow({ 
+    show: false,
+    webPreferences: {
+      partition: 'persist:jvc_session' // Crucial pour retrouver tes cookies
+    }
+  });
+
+  try {
+    await tempWin.loadURL('https://www.jeuxvideo.com/');
+
+    // 2. On exécute le script pour choper le pseudo
+    // J'ajoute un petit check pour .account-pseudo au cas où le sélecteur change
+    const username = await tempWin.webContents.executeJavaScript(`
+      (function() {
+        const selector = '.headerAccount__pseudo, .account-pseudo, .headerAccount__pseudoText';
+        const el = document.querySelector(selector);
+        return el ? el.innerText.trim() : null;
+      })()
+    `);
+
+    // 3. On ferme la fenêtre
+    tempWin.destroy();
+
+    if (username) {
+      console.log("Session active :", username);
+      return { isConnected: true, username };
+    }
+    
+    console.log("Aucune session trouvée.");
+    return { isConnected: false, username: null };
+
+  } catch (err) {
+    console.error("Erreur lors du check-session :", err);
+    if (!tempWin.isDestroyed()) tempWin.destroy();
+    return { isConnected: false, username: null };
   }
-  return { isConnected: false, username: null };
 });
 
-// Nouveau handler pour le login
-ipcMain.handle('login', async (event, { pseudo, password }) => {
-  return await scraper.login(pseudo, password);
+
+
+ipcMain.handle('send-message', async (event, { text }) => {
+  const result = await scraper.postMessage(text);
+  
+  if (result.success) {
+    console.log("Message posté avec succès !");
+  } else {
+    console.log("Échec de l'envoi :", result.error);
+  }
+  
+  return result;
 });

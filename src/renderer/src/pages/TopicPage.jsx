@@ -1,126 +1,167 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import MessageItem from '../components/MessageItem'
+import ReplyBox from '../components/ReplyBox'
+import './TopicPage.css';
 
 export default function TopicPage({ topic, onBack }) {
-  // On stocke l'URL actuelle du topic (qui changera quand on change de page)
-  const [currentUrl, setCurrentUrl] = useState(`https://www.jeuxvideo.com${topic.url}`);
-  const [data, setData] = useState({ messages: [], pagination: { current: 1, max: 1 } });
+  const [currentUrl, setCurrentUrl] = useState(`${topic.url}`);
+  const [data, setData] = useState({
+    messages: [],
+    pagination: { current: 1, max: 1 },
+    authPayload: {}
+  });
   const [loading, setLoading] = useState(true);
+  const [isSending, setIsSending] = useState(false);
+
+  const lastFetchedUrl = useRef(null);
 
   const loadMessages = useCallback(async (urlToLoad) => {
     if (!urlToLoad) return;
-    
+
+    if (lastFetchedUrl.current === urlToLoad && loading) return;
+
     setLoading(true);
     try {
-      // Le scraper doit maintenant renvoyer { messages, pagination }
       const result = await window.api.getMessages(urlToLoad);
       setData(result);
     } catch (err) {
       console.error("Erreur chargement messages:", err);
+      lastFetchedUrl.current = null;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // On recharge quand l'URL change
   useEffect(() => {
-    loadMessages(currentUrl);
-  }, [currentUrl, loadMessages]);
+    let isCancelled = false;
 
+    const fetchData = async () => {
+      // On attend un micro-délai pour laisser le "double montage" passer
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (isCancelled) return;
+
+      console.log("🔥 Appel unique pour :", currentUrl);
+      loadMessages(currentUrl);
+    };
+
+    fetchData();
+
+    return () => {
+      isCancelled = true; // Si React remonte le composant, la première exécution s'arrêtera ici
+    };
+  }, [currentUrl]);
+
+
+  // --- FONCTION POUR POSTER (MÉTHODE PILOTAGE) ---
+  const handlePostMessage = async (messageText) => {
+    setIsSending(true);
+    try {
+      const res = await window.api.sendNativePost({ text: messageText });
+
+      if (res.success) {
+        loadMessages(currentUrl);
+      } else {
+        alert("Erreur : " + res.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  
   const goToPage = (pageNumber) => {
-    // Les URLs JVC : /forums/42-19163-70500488-PAGE-0-1-0-nom.htm
-    // Le numéro de page est le 4ème segment (index 3 après le split '-')
     const parts = currentUrl.split('-');
     parts[3] = pageNumber;
     const newUrl = parts.join('-');
-    
     setCurrentUrl(newUrl);
-    window.scrollTo(0, 0); // On remonte en haut de page
+    window.scrollTo(0, 0);
   };
 
   const { messages, pagination } = data;
 
-return (
-  <main className="container" style={{ padding: '20px' }}>
-    {/* Barre d'outils spécifique au Topic */}
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'space-between', 
-      alignItems: 'center', 
-      marginBottom: '20px',
-      background: '#25262b',
-      padding: '10px',
-      borderRadius: '8px'
-    }}>
-      <h2 style={{ margin: 0, fontSize: '1.1rem', color: '#eee' }}>{topic.title}</h2>
+  console.log(pagination);
+
+  return (
+    <main className="wrap" style={{ padding: '20px', paddingBottom: '100px' }}>
       
-      <div style={{ display: 'flex', gap: '10px' }}>
-        {/* Bouton Retour déplacé ici */}
-        <button onClick={onBack} style={{ padding: '5px 12px', cursor: 'pointer' }}>⬅ Retour</button>
-        {/* Bouton Refresh */}
-        <button onClick={() => loadMessages(currentUrl)} disabled={loading} style={{ cursor: 'pointer' }}>
-          {loading ? '...' : '🔄'}
+      
+    <div className="topic-header">
+      <div>
+        <div className="topic-h-title">{topic.title}</div>
+        <div className="topic-h-sub">par <span>alex.b</span> · Développement Web · 87 messages</div>
+      </div>
+      <div className="topic-actions">
+        <button onClick={onBack} className="btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Retour
+        </button>
+        <button onClick={() => loadMessages(currentUrl)} disabled={loading} className="btn-sm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.5 15a9 9 0 1 1-2.6-7.4L23 10"/></svg>
+          Actualiser
         </button>
       </div>
     </div>
 
-    {/* PAGINATION HAUT */}
-    <PaginationBar 
-      pagination={pagination} 
-      goToPage={goToPage} 
-      loading={loading} 
-      position="top" 
-    />
+    <PaginationBar
+        pagination={pagination}
+        goToPage={goToPage}
+        loading={loading}
+        position="top"
+      />
 
-    {/* LISTE DES MESSAGES */}
-    {loading && messages.length === 0 ? (
-      <p>Chargement des messages...</p>
-    ) : (
-      <div style={{ opacity: loading ? 0.6 : 1, transition: 'opacity 0.2s' }}>
-        {messages.map(m => (
+    <div className="msg-list" id="msgList" style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+            {/* LISTE DES MESSAGES */}
+      {loading && messages.length === 0 ? (
+        <p></p>
+      ) : (
+
+        <div className="msg-list" id="msgList">
+          {messages.map(m =>(
           <MessageItem key={m.id} msg={m} />
         ))}
-      </div>
-    )}
+        </div>
+      )}
+    </div>
 
-    {/* PAGINATION BAS */}
-    {!loading && (
-      <PaginationBar 
-        pagination={pagination} 
-        goToPage={goToPage} 
-        loading={loading} 
-        position="bottom" 
+    
+      <PaginationBar
+        pagination={pagination}
+        goToPage={goToPage}
+        loading={loading}
+        position="top"
       />
-    )}
-  </main>
-);
+      
+
+      {/* ZONE DE RÉPONSE */}
+      <hr />
+      {!loading ? (
+        <ReplyBox
+          onSubmit={handlePostMessage}
+          isSending={isSending}
+        />
+      ) : (
+        <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
+          Chargement...
+        </div>
+      )}
+    </main>
+  );
 }
 
-
-
-
-// Fonction utilitaire pour éviter la répétition
 const PaginationBar = ({ pagination, goToPage, loading, position }) => {
   if (!pagination || pagination.max <= 1) return null;
-
-  const isTop = position === 'top';
-
   return (
-    <div style={{ 
-      display: 'flex', 
-      gap: '5px', 
-      marginTop: isTop ? '0' : '20px', 
-      marginBottom: isTop ? '20px' : '0', 
-      alignItems: 'center',
-      justifyContent: isTop ? 'flex-start' : 'center' // Aligné à gauche en haut, centré en bas
-    }}>
-      <button onClick={() => goToPage(1)} disabled={loading || pagination.current === 1}>« 1</button>
-      <button onClick={() => goToPage(pagination.current - 1)} disabled={loading || pagination.current === 1}>‹</button>
-      
-      <span style={{ margin: '0 10px' }}>Page <b>{pagination.current}</b> / {pagination.max}</span>
-      
-      <button onClick={() => goToPage(pagination.current + 1)} disabled={loading || pagination.current >= pagination.max}>›</button>
-      <button onClick={() => goToPage(pagination.max)} disabled={loading || pagination.current >= pagination.max}>{pagination.max} »</button>
+    <div className="pag-bar">
+      <button className="pag-btn" onClick={() => goToPage(1)} disabled={loading || pagination.current === 1}>« 1</button>
+      <button className="pag-btn" onClick={() => goToPage(pagination.current - 1)} disabled={loading || pagination.current === 1}>‹</button>
+      <span className="pag-sep"></span>
+      <button className="pag-btn active">Page <b>{pagination.current}</b> / {pagination.max}</button>
+      <span className="pag-sep"></span>
+      <button className="pag-btn" onClick={() => goToPage(pagination.current + 1)} disabled={loading || pagination.current >= pagination.max}>›</button>
+      <button className="pag-btn" onClick={() => goToPage(pagination.max)} disabled={loading || pagination.current >= pagination.max}>{pagination.max} »</button>
     </div>
   );
 };
