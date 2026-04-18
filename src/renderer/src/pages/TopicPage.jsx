@@ -91,7 +91,7 @@ export default function TopicPage({ topic, onBack }) {
     <div className="topic-header">
       <div>
         <div className="topic-h-title">{topic.title}</div>
-        <div className="topic-h-sub">par <span>alex.b</span> · Développement Web · 87 messages</div>
+        <div className="topic-h-sub">par <span>X.X</span> · XXXX · XX messages</div>
       </div>
       <div className="topic-actions">
         <button onClick={onBack} className="btn-sm">

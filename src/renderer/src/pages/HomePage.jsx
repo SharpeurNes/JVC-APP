@@ -61,7 +61,7 @@ export default function HomePage({ cache, setCache, onSelectTopic }) {
         </div>
         <button onClick={() => loadData(currentUrl)} disabled={loading} className="btn-refresh">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10" /><path d="M20.5 15a9 9 0 1 1-2.6-7.4L23 10" /></svg>
-          {loading ? '...' : 'Actualiser'}
+          Actualiser
         </button>
       </div>
 
@@ -83,7 +83,7 @@ export default function HomePage({ cache, setCache, onSelectTopic }) {
       {loading && cache.length === 0 ? (
         <p>Chargement des sujets...</p>
       ) : (
-        <div style={{ padding: '0 1rem' }}>
+        <div>
           <div className="col-headers">
             <div></div>
             <div className="col-h">Sujet</div>

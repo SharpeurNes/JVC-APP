@@ -174,21 +174,39 @@ ipcMain.handle('auth:check-session', async () => {
       })()
     `);
 
+const avatarUrl = await tempWin.webContents.executeJavaScript(`
+  (function() {
+    const element = document.querySelector('.headerAccount__avatar');
+    
+    // Si l'élément n'existe pas, on s'arrête tout de suite proprement
+    if (!element) return null;
+
+    // On récupère le style
+    const rawUrl = element.style.backgroundImage;
+    
+    // Si pas de background-image, on renvoie null
+    if (!rawUrl || rawUrl === 'none') return null;
+
+    // Extraction de l'URL
+    return rawUrl.replace(/^url\\(["']?/, '').replace(/["']?\\)$/, '');
+  })()
+`);
+
     // 3. On ferme la fenêtre
     tempWin.destroy();
 
     if (username) {
-      console.log("Session active :", username);
-      return { isConnected: true, username };
+      console.log("Session active :", username, ", avec avatar", avatarUrl);
+      return { isConnected: true, username, avatarUrl };
     }
     
     console.log("Aucune session trouvée.");
-    return { isConnected: false, username: null };
+    return { isConnected: false, username: null, avatarUrl: null };
 
   } catch (err) {
     console.error("Erreur lors du check-session :", err);
     if (!tempWin.isDestroyed()) tempWin.destroy();
-    return { isConnected: false, username: null };
+    return { isConnected: false, username: null, avatarUrl: null };
   }
 });
 

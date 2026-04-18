@@ -48,12 +48,6 @@ function App() {
     });
   }, []); // [] = s'exécute UNE SEULE FOIS au démarrage
 
-  // 2. Uniquement pour la sauvegarde de la vue
-  useEffect(() => {
-    if (view && view.name) {
-      localStorage.setItem('last_view', JSON.stringify(view));
-    }
-  }, [view]); // S'exécute quand la vue change
 
   if (loading) return <div style={{ color: 'white' }}>Chargement...</div>;
 
@@ -70,14 +64,16 @@ function App() {
         <nav className="app-nav">
           <button className="nav-link active">Accueil</button>
           <button className="nav-link">Catégories</button>
-          <button className="nav-link">Membres</button>
+          <button className="nav-link">Classement</button>
         </nav>
         <div className="user-zone">
 
           {user.isConnected ? (
             <div className="user-zone">
               <div className="user-pill">
-                <div className="avatar-sm">MR</div>
+                <div className="avatar-xs">
+                  <img className="avatar-xs" src={user.avatarUrl || 'https://www.jeuxvideo.com/favicon.ico'} alt="Avatar" />
+                </div>
                 <span>{user.username}</span>
               </div>
               <button className="btn-logout" title="Déconnexion" onClick={handleLogout}>
@@ -111,7 +107,7 @@ function App() {
       {/* AJOUT DE LA KEY ICI : c'est le fix magique */}
       {view.name === 'topic' && view.data && (
         <TopicPage
-          key={view.data.url} 
+          key={view.data.url}
           topic={view.data}
           onBack={() => setView({ name: 'home', data: null })}
         />

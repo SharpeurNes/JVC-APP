@@ -127,16 +127,6 @@ class ForumScraper {
         topicUrl: targetUrl
       };
 
-      //console.log(this.lastSessionData);
-
-      console.log("🔍 Payload keys:", Object.keys(data));
-console.log("🔍 ajaxSessionPreferencesToken:", data.ajaxSessionPreferencesToken);
-// Cherche aussi s'il y a un autre champ ajax
-console.log("🔍 Tous les champs ajax:", 
-    Object.entries(data)
-        .filter(([k]) => k.toLowerCase().includes('ajax') || k.toLowerCase().includes('hash') || k.toLowerCase().includes('token'))
-        .map(([k,v]) => `${k}: ${JSON.stringify(v).substring(0,50)}`)
-);
 
       // On prépare les messages pour ton interface
       const messages = (data.listMessage || []).map(msg => ({
