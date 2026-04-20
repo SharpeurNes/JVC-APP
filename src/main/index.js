@@ -223,3 +223,16 @@ ipcMain.handle('send-message', async (event, { text }) => {
   
   return result;
 });
+
+
+ipcMain.handle('delete-message', async (event, deleteUrl) => {
+  const result = await scraper.deleteMessage(deleteUrl);
+  
+  if (result.success) {
+    console.log("Message supprimé avec succès !");
+  } else {
+    console.log("Échec de la suppression :", result.error);
+  }
+  
+  return result;
+});

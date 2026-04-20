@@ -18,6 +18,7 @@ if (process.contextIsolated) {
       logout: () => ipcRenderer.invoke('auth:logout'),
       checkSession: () => ipcRenderer.invoke('auth:check-session'),
       sendNativePost: (data) => ipcRenderer.invoke('send-message', data),
+      deleteMessage: (deleteUrl) => ipcRenderer.invoke('delete-message', deleteUrl),
     })
   } catch (error) {
     console.error(error)

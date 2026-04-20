@@ -40,7 +40,7 @@ class ForumScraper {
       return {
         topics,
         currentPage: data.pagerView?.currentPage || 1,
-    maxPage: data.pagerView?.pageCount || 1
+        maxPage: data.pagerView?.pageCount || 1
 
       };
     } catch (e) {
@@ -133,16 +133,20 @@ class ForumScraper {
         id: msg.id,
         author: msg.publishedAuthorName,
         avatar: msg.publishedAuthorAvatar,
-        content: msg.renderedText
+        content: msg.renderedText,
+        deleteUrl: msg.actions?.delete?.url || null,
+        reportUrl: msg.actions?.report?.url || null,
       }));
+
+      //console.log("🔍 Payload complet:", JSON.stringify(data, null, 2))
 
       return {
         messages,
         topicId: this.lastSessionData.topicId,
         pagination: {
-        current: data.pagerView?.currentPage || 1,
-        max: data.pagerView?.pageCount || 1
-      },
+          current: data.pagerView?.currentPage || 1,
+          max: data.pagerView?.pageCount || 1
+        },
         sessionData: this.lastSessionData
       };
 
@@ -152,55 +156,12 @@ class ForumScraper {
     }
   }
 
-  //   const response = await this.jvcSession.fetch(targetUrl, {
-  //     method: 'GET',
-  //     headers: {
-  //       'User-Agent': this.userAgent,
-  //       'Referer': 'https://www.jeuxvideo.com/',
-  //       'Accept': 'application/json'
-  //     }
-  //   });
-
-  //   const data = await response.json();
-
-  //   console.log("✅ [SCRAPER] JSON reçu avec succès");
-
-  //   const messages = (data.listMessage || []).map(msg => ({
-  //     id: msg.id,
-  //     author: msg.publishedAuthorName,
-  //     avatar: msg.publishedAuthorAvatar,
-  //     content: msg.renderedText
-  //   }));
-
-  //   this.lastSessionData = {
-  //     ajaxToken: data.ajaxToken,
-  //     formSession: data.formSession,
-  //     topicId: data.topicId || 0,
-  //     forumId: data.forumId || 0,
-  //   };
-
-  //   return {
-  //     messages,
-  //     topicId: data.topicId || 0,
-  //     pagination: {
-  //       current: data.pagerView?.currentPage || 1,
-  //       max: data.pagerView?.pageCount || 1
-  //     },
-  //     sessionData: this.lastSessionData
-  //   };
-
-  // } catch (error) {
-  //   console.error("🔥 [SCRAPER] CRASH dans getTopicMessages :", error);
-  //   return { messages: [], pagination: { current: 1, max: 1 }, sessionData: null };
-  // }
 
   async postMessage(messageText) {
     const tokens = this.lastSessionData;
     if (!tokens || !tokens.fs) return { success: false, error: "Tokens manquants" };
 
     const url = "https://www.jeuxvideo.com/forums/message/add";
-
-console.log(messageText);
 
     try {
       const rand1 = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
@@ -216,13 +177,13 @@ console.log(messageText);
         ['topicId', tokens.topicId.toString()],
         ['forumId', tokens.forumId.toString()],
         ['group', "1"],
-        ['messageId', ""],   
+        ['messageId', ""],
         ['fs_session', tokens.fs.session],
         ['fs_timestamp', tokens.fs.timestamp.toString()],
         ['fs_version', tokens.fs.version],
         [tokens.fs.key, tokens.fs.value],
         ['ajax_hash', tokens.ajaxToken],
-        ['resetFormAfterSuccess', "false"],  
+        ['resetFormAfterSuccess', "false"],
       ];
 
       let body = "";
@@ -252,7 +213,6 @@ console.log(messageText);
 
       if (resText.trim().startsWith('{')) {
         const json = JSON.parse(resText);
-        console.log("📝 Réponse JVC (JSON) :", json);
 
         if (json.redirectUrl || json.status === "success") {
           return { success: true };
@@ -275,7 +235,54 @@ console.log(messageText);
   }
 
 
+  async deleteMessage(deleteUrl, messageId) {
+    const tokens = this.lastSessionData;
+    if (!tokens || !tokens.ajaxToken) return { success: false, error: "Tokens manquants" };
+    console.log(deleteUrl);
+
+    try {
+      const fullUrl = `https://www.jeuxvideo.com${deleteUrl}`;
+      const response = await this.jvcSession.fetch(fullUrl, {
+        method: 'POST',
+        headers: {
+          'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+          'Accept': 'application/json',
+          'Accept-Language': 'fr',
+          'X-Requested-With': 'XMLHttpRequest',
+          'Cache-Control': 'no-cache',
+          'Origin': 'https://www.jeuxvideo.com',
+          'Referer': tokens.topicUrl,
+        },
+        body: null
+      });
+
+      const resText = await response.text();
+
+      if (resText.trim().startsWith('{')) {
+        const json = JSON.parse(resText);
+        console.log("📝 Réponse delete JVC :", json);
+
+        if (json.success && json.success.length > 0) {
+          return { success: true };
+        }
+
+        if (json.redirectUrl || json.html) {
+          return { success: true };
+        }
+        if (json.errors && json.errors.length > 0) {
+          return { success: false, error: json.errors[0] };
+        }
+      }
+
+      return { success: false, error: "Erreur inconnue" };
+
+    } catch (error) {
+      console.error("🔥 Erreur delete:", error);
+      return { success: false, error: error.message };
+    }
+  }
 
 }
+
 
 export const scraper = new ForumScraper();

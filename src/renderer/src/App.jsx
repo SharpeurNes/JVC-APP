@@ -110,6 +110,7 @@ function App() {
           key={view.data.url}
           topic={view.data}
           onBack={() => setView({ name: 'home', data: null })}
+          myUsername={user.username}
         />
       )}
     </div>

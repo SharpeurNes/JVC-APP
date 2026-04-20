@@ -6,10 +6,21 @@ const icoFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 
 
-export default function MessageItem({ msg }) {
+export default function MessageItem({ msg, isUser, onDelete }) {
+
+  const handleDelete = () => {
+    onDelete(msg.deleteUrl, msg.id);
+  }
+
+  const handleEdit = () => {
+    if(window.confirm("Êtes-vous sûr de vouloir éditer ce message ?")) {
+      return;
+    }
+  }
+
   return (
 
-    <div className="msg">
+    <div className="msg" data-message-id={msg.id}>
       <img className="avatar-md"
         src={msg.avatar || 'https://www.jeuxvideo.com/img/default_avatar.png'}
         alt="avatar"
@@ -17,14 +28,17 @@ export default function MessageItem({ msg }) {
       <div className="msg-right">
         <div className="msg-top">
           <div className="msg-author-block">
-            <span className="msg-author">{msg.author}</span>
+            <span className="msg-author" style = {{color: isUser ? '#77a6d8' : '#9a9a9a'}}>{msg.author}</span>
             <span className="msg-date">{msg.date}</span>
             {/* <span className="msg-num">#${msg.num}</span> */}
           </div>
           <div className="msg-tools">
             <button className="tool-btn" title="Citer">C</button>
-            <button className="tool-btn danger" title="Bloquer">B</button>
-            <button className="tool-btn danger" title="Signaler">R</button>
+            {!isUser && <button className="tool-btn danger" title="Signaler">R</button>}
+            {!isUser && <button className="tool-btn danger" title="Bloquer">B</button> }
+            {isUser && <button className="tool-btn" title="Modifier" onClick={handleEdit}>E</button>}
+            {isUser && <button className="tool-btn" title="Supprimer" onClick={handleDelete}>D</button>}
+            
           </div>
         </div>
         <div className="msg-body" dangerouslySetInnerHTML={{ __html: msg.content }} style={{ lineHeight: '1.4' }} />

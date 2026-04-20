@@ -3,7 +3,7 @@ import MessageItem from '../components/MessageItem'
 import ReplyBox from '../components/ReplyBox'
 import './TopicPage.css';
 
-export default function TopicPage({ topic, onBack }) {
+export default function TopicPage({ topic, onBack, myUsername }) {
   const [currentUrl, setCurrentUrl] = useState(`${topic.url}`);
   const [data, setData] = useState({
     messages: [],
@@ -12,6 +12,7 @@ export default function TopicPage({ topic, onBack }) {
   });
   const [loading, setLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const lastFetchedUrl = useRef(null);
 
@@ -71,6 +72,28 @@ export default function TopicPage({ topic, onBack }) {
     }
   };
 
+  //Fonction pour delete un post
+  const handleDeleteMessage = async (deleteUrl, messageId) => {
+    setLoading(true);
+    try {
+      const res = await window.api.deleteMessage(deleteUrl);
+      if(res.success){
+        
+        setData(prevData => ({
+          ...prevData,
+          messages: prevData.messages.filter(msg => msg.id !== messageId)
+        }));
+        console.log(`✅ Message ${deleteUrl} supprimé.`);
+      } else {
+        alert("Erreur : " + res.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   
   const goToPage = (pageNumber) => {
     const parts = currentUrl.split('-');
@@ -120,7 +143,7 @@ export default function TopicPage({ topic, onBack }) {
 
         <div className="msg-list" id="msgList">
           {messages.map(m =>(
-          <MessageItem key={m.id} msg={m} />
+          <MessageItem key={m.id} msg={m} isUser={m.author === myUsername} onDelete={handleDeleteMessage} />
         ))}
         </div>
       )}
