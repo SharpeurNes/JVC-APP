@@ -25,7 +25,7 @@ export default function TopicItem({ topic, onClick, i }) {
 
       <div className="topic-main">
         <div className="topic-title">{topic.title}</div>
-        <div className="topic-meta">par <span>{topic.author}</span></div>
+        <div className="topic-meta"><span>{topic.author}</span></div>
       </div>
       <div className="topic-count">{topic.msgCount}</div>
       <div className="topic-time">{topic.time}</div>

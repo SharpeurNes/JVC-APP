@@ -23,6 +23,7 @@ function App() {
 
   const [topicsCache, setTopicsCache] = useState([]);
 
+
   const [user, setUser] = useState({ isConnected: false, username: '' });
   const [loading, setLoading] = useState(true); // Pour éviter un flash du bouton connexion
 
@@ -48,8 +49,27 @@ function App() {
     });
   }, []); // [] = s'exécute UNE SEULE FOIS au démarrage
 
+  const [forumId, setForumId] = useState(34008)
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const forums = [
+    { id: 51, name: "18-25" },
+    { id: 1000021, name: "Communaute" },
+    { id: 19163, name: "League of Legends" },
+    { id: 36, name: "Guerre des consoles" },
+    { id: 98, name: "Animation" },
+    { id: 34008, name: "Lost Ark (Testing)" }
+  ];
+
+  const handleForumChange = (id) => {
+    setForumId(id);
+    setIsMenuOpen(false); // Ferme le menu après le clic
+  };
+
 
   if (loading) return <div style={{ color: 'white' }}>Chargement...</div>;
+
+  //MENU DEROULANT FORUMS
+
 
   return (
     <div>
@@ -63,7 +83,25 @@ function App() {
         </div>
         <nav className="app-nav">
           <button className="nav-link active">Accueil</button>
-          <button className="nav-link">Catégories</button>
+          <div className="nav-dropdown-container">
+          <button className="nav-link" onClick={(() => setIsMenuOpen(!isMenuOpen))}>Forums ▾</button>
+
+          {isMenuOpen && (
+            <ul className="nav-dropdown-menu">
+              {forums.map(f => (
+                <li key={f.id}>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => handleForumChange(f.id)}
+                    style={{ fontWeight: forumId === f.id ? 'bold' : 'normal' }}
+                  >
+                    {f.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+</div>
           <button className="nav-link">Classement</button>
         </nav>
         <div className="user-zone">
@@ -84,7 +122,7 @@ function App() {
             <div className="user-zone">
               <button
                 onClick={() => window.api.openLoginWindow()}
-                className="btn-logout"
+                className="btn-login"
               >
                 Connexion
               </button>
@@ -101,6 +139,7 @@ function App() {
           cache={topicsCache}
           setCache={setTopicsCache}
           onSelectTopic={(topic) => setView({ name: 'topic', data: topic })}
+          forumId={forumId}
         />
       </div>
 

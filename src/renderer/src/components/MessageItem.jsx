@@ -28,7 +28,7 @@ export default function MessageItem({ msg, isUser, onDelete }) {
       <div className="msg-right">
         <div className="msg-top">
           <div className="msg-author-block">
-            <span className="msg-author" style = {{color: isUser ? '#77a6d8' : '#9a9a9a'}}>{msg.author}</span>
+            <span className="msg-author" style = {{color: isUser ? '#e5705e' : '#a8a8a8'}}>{msg.author}</span>
             <span className="msg-date">{msg.date}</span>
             {/* <span className="msg-num">#${msg.num}</span> */}
           </div>
@@ -37,7 +37,7 @@ export default function MessageItem({ msg, isUser, onDelete }) {
             {!isUser && <button className="tool-btn danger" title="Signaler">R</button>}
             {!isUser && <button className="tool-btn danger" title="Bloquer">B</button> }
             {isUser && <button className="tool-btn" title="Modifier" onClick={handleEdit}>E</button>}
-            {isUser && <button className="tool-btn" title="Supprimer" onClick={handleDelete}>D</button>}
+            {isUser && <button className="tool-btn danger" title="Supprimer" onClick={handleDelete}>D</button>}
             
           </div>
         </div>

@@ -1,21 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import TopicItem from '../components/TopicItem'
 
-export default function HomePage({ cache, setCache, onSelectTopic }) {
+export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
   // On gère l'URL actuelle. Par défaut : page 1
-  const [currentUrl, setCurrentUrl] = useState('https://www.jeuxvideo.com/forums/0-34008-0-1-0-1-0-lost-ark.htm');
   const [currentPage, setCurrentPage] = useState(1);
   const [maxPage, setMaxPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [forumName, setForumName] = useState("Forum");
+
+  const currentUrl = `https://www.jeuxvideo.com/forums/0-${forumId}-0-1-0-${((currentPage - 1) * 25) + 1}-0-x.htm`;
 
   const loadData = useCallback(async (url) => {
     setLoading(true);
     try {
+      console.log("🔥 Fetching URL:", currentUrl);
       const result = await window.api.fetchTopics(url);
-
-      // /!\ CRUCIAL : On ne met en cache QUE le tableau
-      // Si tu mets 'result' entier, cache.map() ne marchera plus
       if (result && result.topics) {
+        setForumName(result.forumName);
         setCache(result.topics); // On stocke uniquement le tableau dans le cache
         setCurrentPage(result.currentPage || 1);
         setMaxPage(result.maxPage || 1);
@@ -29,31 +30,44 @@ export default function HomePage({ cache, setCache, onSelectTopic }) {
   }, [setCache]);
 
   useEffect(() => {
-    loadData(currentUrl);
-  }, [currentUrl, loadData]);
+    let isCancelled = false;
 
-  const goToPage = (pageNumber) => {
-    if (pageNumber < 1) return;
+    const fetchData = async () => {
+      await new Promise(resolve => setTimeout(resolve, 50));
 
-    // Calcul de l'index JVC : (Page - 1) * 25 + 1
-    // Page 1 -> 1 | Page 2 -> 26 | Page 3 -> 51
-    const jvcIndex = (pageNumber - 1) * 25 + 1;
+      if (isCancelled) return
+      console.log("🔥 Appel unique pour :", currentUrl);
+      loadData(currentUrl, loadData);
+    }
 
-    const parts = currentUrl.split('-');
-    parts[5] = jvcIndex; // L'index est le 6ème élément (index 5)
+    fetchData();
 
-    const newUrl = parts.join('-');
-    console.log("Navigation vers URL :", newUrl); // Log pour vérifier l'URL générée
-    setCurrentUrl(newUrl);
-    window.scrollTo(0, 0);
-  };
+    return () => {
+      isCancelled = true; // Si React remonte le composant, la première exécution s'arrêtera ici
+    };
+    
+  }, [currentUrl]);
+
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [forumId]);
+
+const goToPage = (pageNumber) => {
+  if (pageNumber < 1 || pageNumber > maxPage) return;
+
+  setCurrentPage(pageNumber);
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  
+};
 
   return (
     <main className="container">
 
       <div className="forum-header">
         <div className="forum-title-block">
-          <div className="forum-title">Derniers sujets - Page {currentPage}</div>
+          <div className="forum-title">{forumName}</div>
           <div className="online-badge">
             <span className="dot-green"></span>
             142 connectés en ce moment

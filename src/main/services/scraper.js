@@ -27,6 +27,8 @@ class ForumScraper {
       const res = await net.fetch(this.toApiUrl(url));
       const data = await res.json();
 
+      console.log(data.forum?.name + " " + data.pagerView?.currentPage);
+
       const topics = (data.listTopics || []).map(t => ({
         id: t.id,
         title: t.title,
@@ -40,8 +42,8 @@ class ForumScraper {
       return {
         topics,
         currentPage: data.pagerView?.currentPage || 1,
-        maxPage: data.pagerView?.pageCount || 1
-
+        maxPage: data.pagerView?.pageCount || 1,
+        forumName: data.forum?.name,
       };
     } catch (e) {
       console.error("Erreur scraper topics:", e);
@@ -89,14 +91,11 @@ class ForumScraper {
       if (urlMatch) {
         forumId = parseInt(urlMatch[1]); // Le premier groupe (\d+) -> 34008
         topicId = parseInt(urlMatch[2]); // Le deuxième groupe (\d+) -> 76772595
-        console.log(`✅ IDs extraits de l'URL : Forum ${forumId}, Topic ${topicId}`);
       } else {
         // Au cas où la regex échoue, on tente le JSON en dernier recours
         forumId = data.forum?.id || data.forumId || 0;
         topicId = data.topic?.id || data.topicId || 0;
       }
-
-      console.log("✅ [SCRAPER] Payload décodé avec succès");
 
       // 3. ORGANISATION DES TOKENS POUR LE POST
       const fsData = data.formSession;
