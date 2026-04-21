@@ -126,15 +126,18 @@ class ForumScraper {
         topicUrl: targetUrl
       };
 
-
       // On prépare les messages pour ton interface
       const messages = (data.listMessage || []).map(msg => ({
         id: msg.id,
         author: msg.publishedAuthorName,
         avatar: msg.publishedAuthorAvatar,
+        authorLevel: msg.userLevelId,
+        isBlacklisted: msg.isBlacklisted,
+        hasNftBadge: msg.hasNftBadge,
         content: msg.renderedText,
         deleteUrl: msg.actions?.delete?.url || null,
         reportUrl: msg.actions?.report?.url || null,
+        date: msg.publishedDate        
       }));
 
       //console.log("🔍 Payload complet:", JSON.stringify(data, null, 2))

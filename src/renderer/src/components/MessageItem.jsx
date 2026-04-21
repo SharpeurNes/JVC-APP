@@ -6,21 +6,21 @@ const icoFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 
 
 
-export default function MessageItem({ msg, isUser, onDelete }) {
+export default function MessageItem({ msg, isUser, onDelete, onQuote }) {
 
   const handleDelete = () => {
     onDelete(msg.deleteUrl, msg.id);
   }
 
   const handleEdit = () => {
-    if(window.confirm("Êtes-vous sûr de vouloir éditer ce message ?")) {
-      return;
-    }
+    onQuote(msg.content, msg.author, msg.date)
   }
 
   return (
+    
 
     <div className="msg" data-message-id={msg.id}>
+      
       <img className="avatar-md"
         src={msg.avatar || 'https://www.jeuxvideo.com/img/default_avatar.png'}
         alt="avatar"
@@ -28,12 +28,16 @@ export default function MessageItem({ msg, isUser, onDelete }) {
       <div className="msg-right">
         <div className="msg-top">
           <div className="msg-author-block">
-            <span className="msg-author" style = {{color: isUser ? '#e5705e' : '#a8a8a8'}}>{msg.author}</span>
+            <div className="author-info-line">
+              <span className="msg-author" style = {{color: isUser ? '#e5705e' : '#a8a8a8'}}>{msg.author}</span>
+              <span className="msg-level">[Lvl {msg.authorLevel}]</span>
+            </div>
             <span className="msg-date">{msg.date}</span>
-            {/* <span className="msg-num">#${msg.num}</span> */}
           </div>
+          
+          
           <div className="msg-tools">
-            <button className="tool-btn" title="Citer">C</button>
+            <button className="tool-btn" title="Citer" onClick={handleEdit}>C</button>
             {!isUser && <button className="tool-btn danger" title="Signaler">R</button>}
             {!isUser && <button className="tool-btn danger" title="Bloquer">B</button> }
             {isUser && <button className="tool-btn" title="Modifier" onClick={handleEdit}>E</button>}

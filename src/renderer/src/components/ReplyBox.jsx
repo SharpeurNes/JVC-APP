@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import '../pages/TopicPage.css';
 
-const ReplyBox = ({ onSubmit, isSending }) => {
-  const [message, setMessage] = useState('');
+const ReplyBox = ({ onSubmit, isSending, message, setMessage }) => {
+  
 
   const handleSend = () => {
     if (message.trim().length < 3) {
@@ -20,7 +20,7 @@ const ReplyBox = ({ onSubmit, isSending }) => {
         <span className="reply-label">Répondre à ce sujet</span>
       </div>
       <div className="reply-body">
-        <textarea id="replyTa"  maxLength="4000" placeholder="Écrire votre réponse..."
+        <textarea id="reply-textarea"  maxLength="4000" placeholder="Écrire votre réponse..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         disabled={isSending}></textarea>

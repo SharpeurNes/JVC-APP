@@ -94,6 +94,57 @@ export default function TopicPage({ topic, onBack, myUsername }) {
     }
   }
 
+  const [message, setMessage] = useState('');
+
+  //Fonction pour citer msg
+const handleQuote = (htmlContent, author, date) => {
+  const cleanedBody = cleanHtmlForQuote(htmlContent);
+  const header = `> Le ${date} ${author} a écrit :\n`;
+  const finalQuote = `${header}${cleanedBody}\n\n`;
+
+  setMessage(prev => prev + finalQuote);
+  
+  setTimeout(() => {
+    const textarea = document.getElementById('reply-textarea');
+    if (textarea) {
+      textarea.focus();
+      textarea.scrollTop = textarea.scrollHeight;
+      const length = textarea.value.length;
+      textarea.setSelectionRange(length, length);
+      textarea.scrollTop = textarea.scrollHeight;
+    }
+  }, 10);
+};
+
+
+const cleanHtmlForQuote = (html) => {
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = html;
+
+  tempDiv.querySelectorAll('img').forEach(img => {
+    const url = img.getAttribute('src') || img.getAttribute('alt');
+    img.replaceWith(` ${url} `);
+  });
+
+  const processQuotes = (container) => {
+    const quotes = container.querySelectorAll('blockquote');
+    quotes.forEach(quote => {
+      processQuotes(quote);
+      
+      const content = quote.innerText.trim().split('\n').map(line => `>${line}`).join('\n');
+      quote.replaceWith('\n' + content + '\n');
+    });
+  };
+
+  processQuotes(tempDiv);
+  return tempDiv.innerText
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line !== "")
+    .map(line => `> ${line}`)
+    .join('\n');
+};
+
   
   const goToPage = (pageNumber) => {
     const parts = currentUrl.split('-');
@@ -143,7 +194,7 @@ export default function TopicPage({ topic, onBack, myUsername }) {
 
         <div className="msg-list" id="msgList">
           {messages.map(m =>(
-          <MessageItem key={m.id} msg={m} isUser={m.author === myUsername} onDelete={handleDeleteMessage} />
+          <MessageItem key={m.id} msg={m} isUser={m.author === myUsername} onDelete={handleDeleteMessage} onQuote={handleQuote} />
         ))}
         </div>
       )}
@@ -164,6 +215,8 @@ export default function TopicPage({ topic, onBack, myUsername }) {
         <ReplyBox
           onSubmit={handlePostMessage}
           isSending={isSending}
+          message={message}
+          setMessage={setMessage}
         />
       ) : (
         <div style={{ padding: '20px', textAlign: 'center', color: '#888' }}>
