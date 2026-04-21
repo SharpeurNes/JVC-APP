@@ -158,6 +158,9 @@ class ForumScraper {
     }
   }
 
+  async getProfilData(username){
+    return null;
+  }
 
   async postMessage(messageText) {
     const tokens = this.lastSessionData;

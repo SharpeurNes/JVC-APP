@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import HomePage from './pages/HomePage'
 import TopicPage from './pages/TopicPage'
+import ProfilPage from './pages/ProfilPage'
 
 function App() {
   // On essaie de récupérer la dernière vue sauvegardée au démarrage
@@ -107,7 +108,7 @@ function App() {
         <div className="user-zone">
 
           {user.isConnected ? (
-            <div className="user-zone">
+            <div className="user-zone" onClick={(profil) => setView({ name: 'profil', data: profil })}>
               <div className="user-pill">
                 <div className="avatar-xs">
                   <img className="avatar-xs" src={user.avatarUrl || 'https://www.jeuxvideo.com/favicon.ico'} alt="Avatar" />
@@ -150,6 +151,12 @@ function App() {
           topic={view.data}
           onBack={() => setView({ name: 'home', data: null })}
           myUsername={user.username}
+        />
+      )}
+
+      {view.name === 'profil' && view.data && (
+        <ProfilPage
+        username={user.username}        
         />
       )}
     </div>
