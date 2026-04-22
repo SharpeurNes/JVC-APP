@@ -207,7 +207,18 @@ class ForumScraper {
       });
       const description = $descRaw.text().replace(/\s+/g, ' ').trim();
 
-      console.log(description)
+      const styleContent = $('style').text();
+      const match = styleContent.match(/--profile-card-bg-image\s*:\s*url\s*\(\s*["']?(.*?)["']?\s*\)/i);
+      let bannerUrl = "";
+
+      if (match) {
+          bannerUrl = match[1];
+      }
+
+      const styleSize = styleContent.includes('--profile-card-bg-size: 140px');
+      if(styleSize){
+        bannerUrl = '';
+      }
 
       return {
         username: pseudo,
@@ -216,6 +227,7 @@ class ForumScraper {
         infos: infos,
         description: description,
         avatar: avatar,
+        banner: bannerUrl,
       }
     } catch (error) {
       console.error("Erreur scraper profil: ", error);

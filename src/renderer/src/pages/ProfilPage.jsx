@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, Fragment } from 'react'
 import './ProfilPage.css';
+import defaultBanner from '../assets/default-banner.webp'
 
 export default function Profilpage({ username }) {
     const [loading, setLoading] = useState(true);
@@ -9,7 +10,8 @@ export default function Profilpage({ username }) {
         genesisPass: false,
         infos: [],
         description: "",
-        avatar: "https://image.jeuxvideo.com/avatar-md/default.jpg"
+        avatar: "https://image.jeuxvideo.com/avatar-md/default.jpg",
+        banner: "",
     });
 
     const loadProfil = useCallback(async (username) => {
@@ -43,7 +45,7 @@ export default function Profilpage({ username }) {
                         src={part}
                         alt="Noelshack"
                         className="desc-img"
-                        style={{ verticalAlign: 'bottom', aspectRatio: 'auto 68 / 51', width: '68px', height: '51px', overflow: 'content-box'}}
+                        style={{ verticalAlign: 'bottom', aspectRatio: 'auto 68 / 51', width: '68px', height: '51px', overflow: 'content-box' }}
                     />
                 );
             }
@@ -73,6 +75,8 @@ export default function Profilpage({ username }) {
     }, [username]);
 
 
+
+
     if (loading) {
         return (
             <div className="loading-container">
@@ -82,14 +86,16 @@ export default function Profilpage({ username }) {
         );
     }
 
+    const dynamicBannerUrl = {
+        '--khey-banner-url': `url(${data.banner ? data.banner : defaultBanner})`
+    };
+
     return (
         <div className="wrap">
 
             {/* <!-- PROFILE CARD --> */}
-
             <div className="profile-card">
-                <div className="banner">
-                    <div className="banner-accent"></div>
+                <div className="banner" style={dynamicBannerUrl}>
                 </div>
                 <div className="profile-body">
                     <div className="avatar-wrap">
