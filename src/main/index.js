@@ -135,6 +135,10 @@ ipcMain.handle('get-messages', async (event, url) => {
   return await scraper.getTopicMessages(url);
 });
 
+ipcMain.handle('get-profil', async(event, username) => {
+  return await scraper.getProfilData(username);
+})
+
 ipcMain.handle('auth:open-login', () => {
     createLoginWindow()
 });

@@ -19,6 +19,7 @@ if (process.contextIsolated) {
       checkSession: () => ipcRenderer.invoke('auth:check-session'),
       sendNativePost: (data) => ipcRenderer.invoke('send-message', data),
       deleteMessage: (deleteUrl) => ipcRenderer.invoke('delete-message', deleteUrl),
+      getProfilData: (username) => ipcRenderer.invoke('get-profil', username),
     })
   } catch (error) {
     console.error(error)

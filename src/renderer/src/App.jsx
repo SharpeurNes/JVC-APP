@@ -111,7 +111,7 @@ function App() {
             <div className="user-zone" onClick={(profil) => setView({ name: 'profil', data: profil })}>
               <div className="user-pill">
                 <div className="avatar-xs">
-                  <img className="avatar-xs" src={user.avatarUrl || 'https://www.jeuxvideo.com/favicon.ico'} alt="Avatar" />
+                  <img className="avatar-xs" src={user.avatarUrl || 'https://image.jeuxvideo.com/avatar-md/default.jpg'} alt="Avatar" />
                 </div>
                 <span>{user.username}</span>
               </div>

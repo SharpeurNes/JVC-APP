@@ -60,6 +60,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   font-size:22px;font-weight:700;color:#a89ff5;
   position:relative;z-index:1;
 }
+
+.profile-avatar{
+  width:72px;height:72px;border-radius:50%;
+  background:linear-gradient(135deg,#2a2450,#3d3570);
+  border:3px solid #16161f;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:700;color:#a89ff5;
+  position:relative;z-index:1;
+}
+
 .avatar-status{
   position:absolute;bottom:3px;right:3px;
   width:14px;height:14px;border-radius:50%;

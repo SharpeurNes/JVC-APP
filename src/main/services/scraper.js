@@ -1,4 +1,5 @@
 const { net, session } = require('electron');
+import * as cheerio from 'cheerio';
 
 class ForumScraper {
   constructor() {
@@ -28,6 +29,8 @@ class ForumScraper {
       const data = await res.json();
 
       console.log(data.forum?.name + " " + data.pagerView?.currentPage);
+
+      console.log(this.toApiUrl(url));
 
       const topics = (data.listTopics || []).map(t => ({
         id: t.id,
@@ -137,7 +140,7 @@ class ForumScraper {
         content: msg.renderedText,
         deleteUrl: msg.actions?.delete?.url || null,
         reportUrl: msg.actions?.report?.url || null,
-        date: msg.publishedDate        
+        date: msg.publishedDate
       }));
 
       //console.log("🔍 Payload complet:", JSON.stringify(data, null, 2))
@@ -158,8 +161,67 @@ class ForumScraper {
     }
   }
 
-  async getProfilData(username){
-    return null;
+  async getProfilData(username) {
+    if (!this.jvcSession) {
+      this.jvcSession = session.fromPartition('persist:jvc_session');
+    }
+    try {
+      let fetchUrl = "https://www.jeuxvideo.com/profil/" + username + "?mode=infos"
+
+      const response = await this.jvcSession.fetch(fetchUrl, {
+        method: 'GET',
+        headers: { 'User-Agent': this.userAgent }
+      });
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+
+      const $topContent = $('.layout__contentTop');
+
+      const pseudo = $topContent.find('.infos-pseudo-label').text().trim() || "Username";
+
+      const levelRaw = $topContent.find('.ladder-link').text().trim();
+      const level = levelRaw.replace(/\D/g, '') || 0;
+
+      const avatar = $topContent.find('.content-img-avatar img').attr('src') || 'https://image.jeuxvideo.com/avatar-md/default.jpg';
+
+      const genesisPass = $topContent.find('.bloc-genesis-pass').length > 0;
+
+      const infos = {};
+
+      const $infoBloc = $('.bloc-default-profil-body');
+
+      $infoBloc.find('.display-line-lib li').each((i, el) => {
+        const key = $(el).find('.info-lib').text().replace(':', '').replace(/\s+/g, ' ').trim();
+        const value = $(el).find('.info-value').text().replace(/\s+/g, ' ').trim();
+
+        if (key) {
+          infos[key] = value;
+        }
+      })
+
+      const $descRaw = $('.bloc-description-desc');
+      $descRaw.find('img').each((i, el) => {
+        const url = $(el).attr('src')?.replace('/minis/', '/fichiers/') || '';
+        $(el).replaceWith(` ${url} `); // On remplace l'objet image par l'URL texte
+      });
+      const description = $descRaw.text().replace(/\s+/g, ' ').trim();
+
+      console.log(description)
+
+      return {
+        username: pseudo,
+        level: level,
+        genesisPass: genesisPass,
+        infos: infos,
+        description: description,
+        avatar: avatar,
+      }
+    } catch (error) {
+      console.error("Erreur scraper profil: ", error);
+      return null;
+    }
+
   }
 
   async postMessage(messageText) {
