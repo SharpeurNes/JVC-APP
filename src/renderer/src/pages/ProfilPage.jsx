@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, Fragment } from 'react'
 import './ProfilPage.css';
 
 export default function Profilpage({ username }) {
@@ -14,26 +14,52 @@ export default function Profilpage({ username }) {
 
     const loadProfil = useCallback(async (username) => {
         setLoading(true);
-        
+
         try {
             const result = await window.api.getProfilData(username.toLowerCase());
             console.log(result);
             setData(result);
-        } catch(error) {
+        } catch (error) {
             console.error("Erreur chargement profil: ", error);
         } finally {
             setLoading(false);
         }
-
-        
     })
+
+
+    const renderDescription = (text) => {
+        // Cette Regex cherche les URLs Noelshack se terminant par png, jpg ou jpeg
+        const noelshackRegex = /(https?:\/\/image\.noelshack\.com\/fichiers\/[^\s]+\.(?:png|jpg|jpeg))/g;
+
+        // On découpe le texte en gardant les URLs grâce aux parenthèses dans la Regex
+        const parts = text.split(noelshackRegex);
+
+        return parts.map((part, i) => {
+            if (part.match(noelshackRegex)) {
+                // Si la partie est une URL Noelshack, on affiche l'image
+                return (
+                    <img
+                        key={i}
+                        src={part}
+                        alt="Noelshack"
+                        className="desc-img"
+                        style={{ verticalAlign: 'bottom', aspectRatio: 'auto 68 / 51', width: '68px', height: '51px', overflow: 'content-box'}}
+                    />
+                );
+            }
+            // Sinon, on affiche le texte normalement
+            return <span key={i}>{part}</span>;
+        });
+    };
+
+
 
     useEffect(() => {
         let isCancelled = false;
         const fetchData = async () => {
             await new Promise(resolve => setTimeout(resolve, 50));
 
-            if(isCancelled) return;
+            if (isCancelled) return;
 
             console.log("Appel pour loading profil pour: ", username);
             loadProfil(username);
@@ -46,8 +72,15 @@ export default function Profilpage({ username }) {
         }
     }, [username]);
 
-    
 
+    if (loading) {
+        return (
+            <div className="loading-container">
+                <div className="spinner"></div>
+                <p>Chargement du profil de l'élite...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="wrap">
@@ -85,7 +118,7 @@ export default function Profilpage({ username }) {
                     </div> */}
 
                     <p className="profile-desc">
-                        {data.description}
+                        {renderDescription(data.description)}
                     </p>
                 </div>
             </div>
@@ -98,21 +131,31 @@ export default function Profilpage({ username }) {
                 <div className="section-card">
                     <div className="section-title">Informations</div>
                     <div className="info-list">
-                        
-{Object.entries(data.infos).map(([key, value], index) => (
-        <div className="info-row" key={index}>
-            <span className="info-key">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" />
-                    <line x1="8" y1="2" x2="8" y2="6" />
-                    <line x1="3" y1="10" x2="21" y2="10" />
-                </svg>
-                {key}
-            </span>
-            <span className="info-val">{value}</span>
-        </div>
-    ))}
+
+                        {Object.entries(data.infos).map(([key, value], index) => {
+                            // Si la clé est "Messages Forums", on ne retourne RIEN (null)
+                            if (key === "Messages Forums" || key === "Commentaires") return null;
+
+                            // Sinon, on affiche le reste normalement
+                            return (
+                                <Fragment key={index}>
+                                    <div className="info-row">
+                                        <span className="info-key">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="4" width="18" height="18" rx="2" />
+                                                <line x1="16" y1="2" x2="16" y2="6" />
+                                                <line x1="8" y1="2" x2="8" y2="6" />
+                                                <line x1="3" y1="10" x2="21" y2="10" />
+                                            </svg>
+                                            {key}
+                                        </span>
+                                        <span className="info-val">{value}</span>
+                                    </div>
+
+                                    {/* {index === 2 && <div className="divider"></div>} */}
+                                </Fragment>
+                            );
+                        })}
 
                         {/* <div className="info-row">
                             <span className="info-key">
@@ -132,7 +175,7 @@ export default function Profilpage({ username }) {
                             <span className="info-val">mars 2019</span>
                         </div> */}
 
-                
+
 
                     </div>
                 </div>
@@ -142,22 +185,27 @@ export default function Profilpage({ username }) {
                 <div className="section-card">
                     <div className="section-title">Statistiques</div>
                     <div className="stats-grid">
-                        <div className="stat-box">
-                            <div className="stat-num">2 481</div>
-                            <div className="stat-label">Messages postés</div>
-                        </div>
-                        <div className="stat-box">
-                            <div className="stat-num">847</div>
-                            <div className="stat-label">Commentaires</div>
-                        </div>
-                        <div className="stat-box">
-                            <div className="stat-num">134</div>
-                            <div className="stat-label">Topics créés</div>
-                        </div>
-                        <div className="stat-box">
-                            <div className="stat-num">1 920</div>
-                            <div className="stat-label">Jours actifs</div>
-                        </div>
+                        {data.infos['Messages Forums'] && (
+                            <div className="stat-box">
+                                <div className="stat-num">{data.infos['Messages Forums'].replace('messages', '').replace('.', ' ')}</div>
+                                <div className="stat-label">Messages postés</div>
+                            </div>
+                        )}
+
+                        {data.infos['Commentaires'] && (
+                            <div className="stat-box">
+                                <div className="stat-num">{data.infos['Commentaires'].replace('commentaires', '').replace('.', ' ')}</div>
+                                <div className="stat-label">Commentaires</div>
+                            </div>
+                        )}
+
+                        {data.infos['Membre depuis'] && (
+                            <div className="stat-box">
+                                <div className="stat-num">{data.infos['Membre depuis'].match(/\(([^)]+)\)/)[1].replace('jours', '') || ""}</div>
+                                <div className="stat-label">Jours actifs</div>
+                            </div>
+                        )}
+
                     </div>
                 </div>
 
@@ -170,7 +218,7 @@ export default function Profilpage({ username }) {
                 <div className="badges-grid">
 
                     <div className="badge legendary">
-                        <div className="badge-icon" style={{background: '#2a1f08'}}>🏆</div>
+                        <div className="badge-icon" style={{ background: '#2a1f08' }}>🏆</div>
                         <div className="badge-info">
                             <div className="badge-name">Top Contributeur</div>
                             <div className="badge-desc">2000+ messages postés</div>
@@ -179,7 +227,7 @@ export default function Profilpage({ username }) {
                     </div>
 
                     <div className="badge rare">
-                        <div className="badge-icon" style={{background: '#0f1f33'}}>⚡</div>
+                        <div className="badge-icon" style={{ background: '#0f1f33' }}>⚡</div>
                         <div className="badge-info">
                             <div className="badge-name">Réponse Éclair</div>
                             <div className="badge-desc">100 réponses en moins d'1 min</div>
@@ -188,7 +236,7 @@ export default function Profilpage({ username }) {
                     </div>
 
                     <div className="badge">
-                        <div className="badge-icon" style={{background: '#1a1928'}}>🎯</div>
+                        <div className="badge-icon" style={{ background: '#1a1928' }}>🎯</div>
                         <div className="badge-info">
                             <div className="badge-name">Vieux de la vieille</div>
                             <div className="badge-desc">Membre depuis 5 ans</div>
@@ -197,7 +245,7 @@ export default function Profilpage({ username }) {
                     </div>
 
                     <div className="badge rare">
-                        <div className="badge-icon" style={{background: '#0f2d24'}}>🌿</div>
+                        <div className="badge-icon" style={{ background: '#0f2d24' }}>🌿</div>
                         <div className="badge-info">
                             <div className="badge-name">Modérateur Honoraire</div>
                             <div className="badge-desc">Aide la communauté</div>
@@ -206,7 +254,7 @@ export default function Profilpage({ username }) {
                     </div>
 
                     <div className="badge">
-                        <div className="badge-icon" style={{background: '#1a1928'}}>🔥</div>
+                        <div className="badge-icon" style={{ background: '#1a1928' }}>🔥</div>
                         <div className="badge-info">
                             <div className="badge-name">Streak 30 jours</div>
                             <div className="badge-desc">Connecté 30j de suite</div>
@@ -215,7 +263,7 @@ export default function Profilpage({ username }) {
                     </div>
 
                     <div className="badge legendary">
-                        <div className="badge-icon" style={{background: '#2d1020'}}>💎</div>
+                        <div className="badge-icon" style={{ background: '#2d1020' }}>💎</div>
                         <div className="badge-info">
                             <div className="badge-name">Diamant</div>
                             <div className="badge-desc">Niveau 30 atteint</div>

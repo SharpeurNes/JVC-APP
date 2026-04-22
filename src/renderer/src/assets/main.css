@@ -1,6 +1,28 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 
+/* La barre elle-même */
+::-webkit-scrollbar {
+    width: 6px; /* Très fine */
+}
+
+/* Le fond de la barre */
+::-webkit-scrollbar-track {
+    background: transparent; 
+}
+
+/* Le petit curseur (le "pouce") */
+::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1); /* Très discret */
+    border-radius: 10px;
+}
+
+/* Au survol, on la montre un peu plus */
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(125, 95, 255, 0.5); /* Ta couleur violette */
+}
+
+
 body { font-family: sans-serif; background: #121212; color: white; margin: 0; }
 .header { 
   display: flex; justify-content: space-between; align-items: center; 
