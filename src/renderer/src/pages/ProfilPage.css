@@ -89,6 +89,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 }
 .level-dot{width:6px;height:6px;border-radius:50%;background:#6c63d4;}
 
+.genesis-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:#3b3f3f;border:1px solid #410b08;
+  color:#c6c6c6;font-size:12px;font-weight:600;
+  padding:4px 10px;border-radius:999px;margin-top:6px;
+  margin-left: 5px;
+}
+.genesis-dot{width:6px;height:6px;border-radius:50%;background:#767575;}
+
 .btn-edit{
   display:flex;align-items:center;gap:6px;
   padding:8px 16px;border-radius:9px;

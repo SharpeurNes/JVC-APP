@@ -54,6 +54,122 @@ export default function Profilpage({ username }) {
         });
     };
 
+    const renderRankBadge = () => {
+        const nbrMsg = data.infos['Messages Forums'].replace('messages', '').replace('.', ' ').replace(' ', '');
+        if (!nbrMsg) {
+            return null
+        } else if (nbrMsg < 50) {
+            //Carton
+            return (
+                <div className="badge common">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>📦</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Carton</div>
+                        <div className="badge-desc">Newfag</div>
+                        <span className="badge-rarity common">Commun</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 200) {
+            //Bronze
+            return (
+                <div className="badge common">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>🟤</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Bronze</div>
+                        <div className="badge-desc">+50 messages</div>
+                        <span className="badge-rarity common">Commun</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 1000) {
+            //Silver
+            return (
+                <div className="badge common">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>🔘</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Silver</div>
+                        <div className="badge-desc">+200 messages</div>
+                        <span className="badge-rarity common">Commun</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 10000) {
+            //Gold
+            return (
+                <div className="badge rare">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>🪙</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Gold</div>
+                        <div className="badge-desc">+1000 messages</div>
+                        <span className="badge-rarity rare">Rare</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 30000) {
+            //Rubis
+            return (
+                <div className="badge common">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>♦️</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Silver</div>
+                        <div className="badge-desc">+10.000 messages</div>
+                        <span className="badge-rarity common">Rare</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 75000) {
+            //Saphir
+            return (
+                <div className="badge rare">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>🔷</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Saphir</div>
+                        <div className="badge-desc">+30.000 messages</div>
+                        <span className="badge-rarity rare">Rare</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg < 150000) {
+            //Emeraude
+            return (
+                <div className="badge rare">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>🟢</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Emeraude</div>
+                        <div className="badge-desc">+30.000 messages</div>
+                        <span className="badge-rarity rare">Rare</span>
+                    </div>
+                </div>
+            );
+        } else if (nbrMsg > 150000) {
+            //Diamant
+            return (
+                <div className="badge legendary">
+                    <div className="badge-icon" style={{ background: '#2d1020' }}>💎</div>
+                    <div className="badge-info">
+                        <div className="badge-name">Diamant</div>
+                        <div className="badge-desc">+150.000 messages</div>
+                        <span className="badge-rarity legendary">Légendaire</span>
+                    </div>
+                </div>
+            );
+        }
+    }
+
+    const renderGenesisPass = () => {
+        if (data.genesisPass) {
+            return (
+                <div className="genesis-badge">
+                    <span className="genesis-dot"></span>
+                    Genesis Pass 👑
+                </div>
+            )
+        } else {
+            return null;
+        }
+
+    }
 
 
     useEffect(() => {
@@ -92,7 +208,6 @@ export default function Profilpage({ username }) {
 
     return (
         <div className="wrap">
-
             {/* <!-- PROFILE CARD --> */}
             <div className="profile-card">
                 <div className="banner" style={dynamicBannerUrl}>
@@ -110,6 +225,7 @@ export default function Profilpage({ username }) {
                                 <span className="level-dot"></span>
                                 Niveau {data.level}
                             </div>
+                            {renderGenesisPass()}
                         </div>
                         <button className="btn-edit">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
@@ -137,12 +253,8 @@ export default function Profilpage({ username }) {
                 <div className="section-card">
                     <div className="section-title">Informations</div>
                     <div className="info-list">
-
                         {Object.entries(data.infos).map(([key, value], index) => {
-                            // Si la clé est "Messages Forums", on ne retourne RIEN (null)
                             if (key === "Messages Forums" || key === "Commentaires") return null;
-
-                            // Sinon, on affiche le reste normalement
                             return (
                                 <Fragment key={index}>
                                     <div className="info-row">
@@ -157,32 +269,10 @@ export default function Profilpage({ username }) {
                                         </span>
                                         <span className="info-val">{value}</span>
                                     </div>
-
                                     {/* {index === 2 && <div className="divider"></div>} */}
                                 </Fragment>
                             );
                         })}
-
-                        {/* <div className="info-row">
-                            <span className="info-key">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="3" /><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 14 8 14s8-8.75 8-14a8 8 0 0 0-8-8z" /></svg>
-                                Localisation
-                            </span>
-                            <span className="info-val">Lyon, France 🇫🇷</span>
-                        </div>
-
-                        <div className="divider"></div>
-
-                        <div className="info-row">
-                            <span className="info-key">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                                Membre depuis
-                            </span>
-                            <span className="info-val">mars 2019</span>
-                        </div> */}
-
-
-
                     </div>
                 </div>
 
@@ -222,61 +312,7 @@ export default function Profilpage({ username }) {
             <div className="badges-card">
                 <div className="section-title">Badges</div>
                 <div className="badges-grid">
-
-                    <div className="badge legendary">
-                        <div className="badge-icon" style={{ background: '#2a1f08' }}>🏆</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Top Contributeur</div>
-                            <div className="badge-desc">2000+ messages postés</div>
-                            <span className="badge-rarity legendary">Légendaire</span>
-                        </div>
-                    </div>
-
-                    <div className="badge rare">
-                        <div className="badge-icon" style={{ background: '#0f1f33' }}>⚡</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Réponse Éclair</div>
-                            <div className="badge-desc">100 réponses en moins d'1 min</div>
-                            <span className="badge-rarity rare">Rare</span>
-                        </div>
-                    </div>
-
-                    <div className="badge">
-                        <div className="badge-icon" style={{ background: '#1a1928' }}>🎯</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Vieux de la vieille</div>
-                            <div className="badge-desc">Membre depuis 5 ans</div>
-                            <span className="badge-rarity common">Commun</span>
-                        </div>
-                    </div>
-
-                    <div className="badge rare">
-                        <div className="badge-icon" style={{ background: '#0f2d24' }}>🌿</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Modérateur Honoraire</div>
-                            <div className="badge-desc">Aide la communauté</div>
-                            <span className="badge-rarity rare">Rare</span>
-                        </div>
-                    </div>
-
-                    <div className="badge">
-                        <div className="badge-icon" style={{ background: '#1a1928' }}>🔥</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Streak 30 jours</div>
-                            <div className="badge-desc">Connecté 30j de suite</div>
-                            <span className="badge-rarity common">Commun</span>
-                        </div>
-                    </div>
-
-                    <div className="badge legendary">
-                        <div className="badge-icon" style={{ background: '#2d1020' }}>💎</div>
-                        <div className="badge-info">
-                            <div className="badge-name">Diamant</div>
-                            <div className="badge-desc">Niveau 30 atteint</div>
-                            <span className="badge-rarity legendary">Légendaire</span>
-                        </div>
-                    </div>
-
+                    {renderRankBadge()}
                 </div>
             </div>
 
