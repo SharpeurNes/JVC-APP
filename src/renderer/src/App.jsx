@@ -1,43 +1,38 @@
-import { useState, useEffect } from 'react'
-import HomePage from './pages/HomePage'
-import TopicPage from './pages/TopicPage'
-import ProfilPage from './pages/ProfilPage'
+import { useState, useEffect } from 'react';
+import HomePage from './pages/HomePage';
+import TopicPage from './pages/TopicPage';
+import ProfilPage from './pages/ProfilPage';
+// 1. Import du store
+import { useNavigationStore } from './store/useNavigationStore';
 
 function App() {
-  // On essaie de récupérer la dernière vue sauvegardée au démarrage
-  const [view, setView] = useState(() => {
-    try {
-      const saved = localStorage.getItem('last_view');
-      if (saved && saved !== "undefined") {
-        const parsed = JSON.parse(saved);
-        // Sécurité CRITIQUE : on vérifie que l'objet a bien la propriété 'name'
-        if (parsed && parsed.name) {
-          return parsed;
-        }
-      }
-    } catch (e) {
-      console.error("Erreur de lecture du cache", e);
-    }
-    // Retour à la normale si le cache est vide ou corrompu
-    return { name: 'home', data: null };
-  });
+  // 2. On récupère view et setView depuis le store global
+  const { view, setView } = useNavigationStore();
 
   const [topicsCache, setTopicsCache] = useState([]);
-
-
   const [user, setUser] = useState({ isConnected: false, username: '' });
-  const [loading, setLoading] = useState(true); // Pour éviter un flash du bouton connexion
+  const [loading, setLoading] = useState(true);
+  const [forumId, setForumId] = useState(34008);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const forums = [
+    { id: 51, name: "18-25" },
+    { id: 1000021, name: "Communaute" },
+    { id: 19163, name: "League of Legends" },
+    { id: 36, name: "Guerre des consoles" },
+    { id: 98, name: "Animation" },
+    { id: 34008, name: "Lost Ark (Testing)" }
+  ];
 
   const handleLogout = async () => {
-    await window.api.logout(); // Vide les cookies côté Electron
-    setUser({ isConnected: false, username: '' }); // Remet le bouton Connexion côté React
+    await window.api.logout();
+    setUser({ isConnected: false, username: '' });
   };
 
-  // 1. Uniquement pour le lancement (Init de l'app)
   useEffect(() => {
     const verifySession = async () => {
       const session = await window.api.checkSession();
-      if (session.isConnected && session.username != "CONNEXION") {
+      if (session.isConnected && session.username !== "CONNEXION") {
         setUser(session);
       }
       setLoading(false);
@@ -48,68 +43,57 @@ function App() {
       setUser(data);
       localStorage.setItem('jvc_pseudo', data.username);
     });
-  }, []); // [] = s'exécute UNE SEULE FOIS au démarrage
-
-  const [forumId, setForumId] = useState(34008)
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const forums = [
-    { id: 51, name: "18-25" },
-    { id: 1000021, name: "Communaute" },
-    { id: 19163, name: "League of Legends" },
-    { id: 36, name: "Guerre des consoles" },
-    { id: 98, name: "Animation" },
-    { id: 34008, name: "Lost Ark (Testing)" }
-  ];
+  }, []);
 
   const handleForumChange = (id) => {
     setForumId(id);
-    setIsMenuOpen(false); // Ferme le menu après le clic
+    setIsMenuOpen(false);
+    setView({name: 'home', data: null})
   };
-
 
   if (loading) return <div style={{ color: 'white' }}>Chargement...</div>;
 
-  //MENU DEROULANT FORUMS
-
+console.log("Vue actuelle :", view);
 
   return (
     <div>
-      {/* HEADER FIXE */}
       <header className="app-header">
+        {/* Navigation vers Home via Store */}
         <div className="app-logo" onClick={() => setView({ name: 'home', data: null })} style={{ cursor: 'pointer' }}>
           <div className="logo-mark">
             <svg viewBox="0 0 16 16"><path d="M8 1L2 4v5c0 3.3 2.5 5.7 6 6.9 3.5-1.2 6-3.6 6-6.9V4L8 1z" /></svg>
           </div>
           <span className="app-name">JVC-APP</span>
         </div>
-        <nav className="app-nav">
-          <button className="nav-link active">Accueil</button>
-          <div className="nav-dropdown-container">
-          <button className="nav-link" onClick={(() => setIsMenuOpen(!isMenuOpen))}>Forums ▾</button>
 
-          {isMenuOpen && (
-            <ul className="nav-dropdown-menu">
-              {forums.map(f => (
-                <li key={f.id}>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => handleForumChange(f.id)}
-                    style={{ fontWeight: forumId === f.id ? 'bold' : 'normal' }}
-                  >
-                    {f.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-</div>
+        <nav className="app-nav">
+          <button className="nav-link" onClick={() => setView({ name: 'home', data: null })}>Accueil</button>
+          <div className="nav-dropdown-container">
+            <button className="nav-link" onClick={() => setIsMenuOpen(!isMenuOpen)}>Forums ▾</button>
+            {isMenuOpen && (
+              <ul className="nav-dropdown-menu">
+                {forums.map(f => (
+                  <li key={f.id}>
+                    <button
+                      className="dropdown-item"
+                      onClick={() => handleForumChange(f.id)}
+                      style={{ fontWeight: forumId === f.id ? 'bold' : 'normal' }}
+                    >
+                      {f.name}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <button className="nav-link">Classement</button>
         </nav>
-        <div className="user-zone">
 
+        <div className="user-zone">
           {user.isConnected ? (
-            <div className="user-zone" onClick={(profil) => setView({ name: 'profil', data: profil })}>
-              <div className="user-pill">
+            <div className="user-zone-content" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* Navigation vers Profil via Store */}
+              <div className="user-pill" onClick={() => setView({ name: 'profil', data: user.username })} style={{ cursor: 'pointer' }}>
                 <div className="avatar-xs">
                   <img className="avatar-xs" src={user.avatarUrl || 'https://image.jeuxvideo.com/avatar-md/default.jpg'} alt="Avatar" />
                 </div>
@@ -120,21 +104,12 @@ function App() {
               </button>
             </div>
           ) : (
-            <div className="user-zone">
-              <button
-                onClick={() => window.api.openLoginWindow()}
-                className="btn-login"
-              >
-                Connexion
-              </button>
-            </div>
+            <button onClick={() => window.api.openLoginWindow()} className="btn-login">Connexion</button>
           )}
-
-
         </div>
       </header>
 
-      {/* CONTENU DES PAGES */}
+      {/* Pages */}
       <div style={{ display: view.name === 'home' ? 'block' : 'none' }}>
         <HomePage
           cache={topicsCache}
@@ -144,7 +119,6 @@ function App() {
         />
       </div>
 
-      {/* AJOUT DE LA KEY ICI : c'est le fix magique */}
       {view.name === 'topic' && view.data && (
         <TopicPage
           key={view.data.url}
@@ -155,12 +129,10 @@ function App() {
       )}
 
       {view.name === 'profil' && view.data && (
-        <ProfilPage
-        username={user.username}        
-        />
+        <ProfilPage username={view.data} />
       )}
     </div>
   );
 }
 
-export default App
+export default App;

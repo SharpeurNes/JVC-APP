@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, Fragment } from 'react'
 import './ProfilPage.css';
 import defaultBanner from '../assets/default-banner.webp'
 
+
 export default function Profilpage({ username }) {
     const [loading, setLoading] = useState(true);
     const [data, setData] = useState({
@@ -13,6 +14,8 @@ export default function Profilpage({ username }) {
         avatar: "https://image.jeuxvideo.com/avatar-md/default.jpg",
         banner: "",
     });
+
+    
 
     const loadProfil = useCallback(async (username) => {
         setLoading(true);
@@ -55,7 +58,7 @@ export default function Profilpage({ username }) {
     };
 
     const renderRankBadge = () => {
-        const nbrMsg = data.infos['Messages Forums'].replace('messages', '').replace('.', ' ').replace(' ', '');
+        const nbrMsg = data.infos['Messages Forums']?.replace('messages', '').replace('.', ' ').replace(' ', '');
         if (!nbrMsg) {
             return null
         } else if (nbrMsg < 50) {
@@ -214,7 +217,7 @@ export default function Profilpage({ username }) {
                 </div>
                 <div className="profile-body">
                     <div className="avatar-wrap">
-                        <img className="profile-avatar" src={data.avatar} alt="Avatar" />
+                        <img className="profile-avatar" src={data.avatar} alt="Avatar"/>
                         <div className="avatar-status"></div>
                     </div>
                     <div className="profile-top-row">
