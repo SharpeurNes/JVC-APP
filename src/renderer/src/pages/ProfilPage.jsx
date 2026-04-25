@@ -293,7 +293,7 @@ export default function Profilpage({ username }) {
 
                         {data.infos['Commentaires'] && (
                             <div className="stat-box">
-                                <div className="stat-num">{data.infos['Commentaires'].replace('commentaires', '').replace('.', ' ')}</div>
+                                <div className="stat-num">{data.infos['Commentaires'].replace('commentaire', '').replace('.', ' ').replace('s', '')}</div>
                                 <div className="stat-label">Commentaires</div>
                             </div>
                         )}
