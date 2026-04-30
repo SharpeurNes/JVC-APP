@@ -139,7 +139,7 @@ class ForumScraper {
         authorLevel: msg.userLevelId,
         isBlacklisted: msg.isBlacklisted,
         hasNftBadge: msg.hasNftBadge,
-        content: msg.text,
+        content: msg.renderedText,
         deleteUrl: msg.actions?.delete?.url || null,
         reportUrl: msg.actions?.report?.url || null,
         date: msg.publishedDate
