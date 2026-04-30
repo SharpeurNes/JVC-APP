@@ -62,6 +62,9 @@ const goToPage = (pageNumber) => {
   
 };
 
+
+console.log(cache);
+
   return (
     <main className="container">
 

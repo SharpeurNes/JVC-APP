@@ -129,6 +129,8 @@ class ForumScraper {
         topicUrl: targetUrl
       };
 
+      console.log(data.listMessage)
+
       // On prépare les messages pour ton interface
       const messages = (data.listMessage || []).map(msg => ({
         id: msg.id,
@@ -137,7 +139,7 @@ class ForumScraper {
         authorLevel: msg.userLevelId,
         isBlacklisted: msg.isBlacklisted,
         hasNftBadge: msg.hasNftBadge,
-        content: msg.renderedText,
+        content: msg.text,
         deleteUrl: msg.actions?.delete?.url || null,
         reportUrl: msg.actions?.report?.url || null,
         date: msg.publishedDate
