@@ -228,6 +228,18 @@ ipcMain.handle('send-message', async (event, { text }) => {
   return result;
 });
 
+ipcMain.handle('post-topic', async (event, { topicTitle, topicMsg }) => {
+  const result = await scraper.postTopic(topicTitle, topicMsg);
+  
+  if (result.success) {
+    console.log("Topic posté avec succès !");
+  } else {
+    console.log("Échec de l'envoi des données pour la création d'un topic :", result.error);
+  }
+  
+  return result;
+});
+
 
 ipcMain.handle('delete-message', async (event, deleteUrl) => {
   const result = await scraper.deleteMessage(deleteUrl);

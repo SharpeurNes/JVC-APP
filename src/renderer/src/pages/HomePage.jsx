@@ -45,7 +45,7 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
     return () => {
       isCancelled = true; // Si React remonte le composant, la première exécution s'arrêtera ici
     };
-    
+
   }, [currentUrl]);
 
 
@@ -53,17 +53,46 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
     setCurrentPage(1);
   }, [forumId]);
 
-const goToPage = (pageNumber) => {
-  if (pageNumber < 1 || pageNumber > maxPage) return;
+  const goToPage = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > maxPage) return;
 
-  setCurrentPage(pageNumber);
+    setCurrentPage(pageNumber);
 
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  
-};
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  };
 
 
-console.log(cache);
+  console.log(cache);
+
+  const [isCreatingTopic, setIsCreatingTopic] = useState(false);
+  const [topicTitle, setTopicTitle] = useState('');
+  const [topicMessage, setTopicMessage] = useState('');
+
+  const handlePostTopic = async (messageText) => {
+    if (topicMessage.trim().length < 3) {
+      alert("Message trop court !");
+      return;
+    }
+    setIsCreatingTopic(true);
+    try {
+      const res = await window.api.postTopic({ topicTitle: topicTitle, topicMsg: topicMessage });
+
+      if (res.success) {
+        alert("topic posté gg");
+        console.log(res);
+      } else {
+        alert("Erreur : " + res.error);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreatingTopic(false);
+    }
+
+    setTopicMessage(''); // Vide le champ après l'envoi
+    setTopicTitle('');
+  };
 
   return (
     <main className="container">
@@ -133,6 +162,36 @@ console.log(cache);
             <button className="pag-btn" onClick={() => goToPage(currentPage + 1)} disabled={loading || currentPage >= maxPage}>›</button>
             <button className="pag-btn" onClick={() => goToPage(maxPage)} disabled={loading || currentPage >= maxPage}>»</button>
 
+          </div>
+
+          <div className="newtopic-zone">
+            <div className="newtopic-top">
+              <span className="newtopic-label">Nouveau topic</span>
+            </div>
+            <div className="newtopic-body">
+              <textarea id="newtopic-textarea" maxLength="100" placeholder="Titre du topic..."
+                value={topicTitle}
+                onChange={(e) => setTopicTitle(e.target.value)}
+                disabled={isCreatingTopic}></textarea>
+            </div>
+            <div className="newtopic-body">
+              <textarea id="reply-textarea" maxLength="16000" placeholder="Écrire le contenu du topic..."
+                value={topicMessage}
+                onChange={(e) => setTopicMessage(e.target.value)}
+                disabled={isCreatingTopic}></textarea>
+            </div>
+            <div className="reply-footer">
+              <span className="char-count" id="charCount">0 / 4000 caractères</span>
+              <button className="btn-post" style={{
+                opacity: isCreatingTopic ? 0.5 : 1,
+                cursor: isCreatingTopic ? 'not-allowed' : 'pointer'
+              }}
+                onClick={handlePostTopic}
+                disabled={isCreatingTopic}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+                Poster
+              </button>
+            </div>
           </div>
         </div>
       )}

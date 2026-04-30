@@ -20,13 +20,13 @@ const ReplyBox = ({ onSubmit, isSending, message, setMessage }) => {
         <span className="reply-label">Répondre à ce sujet</span>
       </div>
       <div className="reply-body">
-        <textarea id="reply-textarea"  maxLength="4000" placeholder="Écrire votre réponse..."
+        <textarea id="reply-textarea"  maxLength="16000" placeholder="Écrire votre réponse..."
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         disabled={isSending}></textarea>
       </div>
       <div className="reply-footer">
-        <span className="char-count" id="charCount">0 / 4000 caractères</span>
+        <span className="char-count" id="charCount">0 / 16.000 caractères</span>
         <button className="btn-post" style={{
             opacity: isSending ? 0.5 : 1,
             cursor: isSending ? 'not-allowed' : 'pointer'

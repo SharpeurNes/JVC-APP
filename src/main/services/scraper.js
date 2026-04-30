@@ -42,6 +42,35 @@ class ForumScraper {
         url: t.url ? (t.url.startsWith('http') ? t.url : 'https://www.jeuxvideo.com' + t.url) : ""
       }));
 
+      // 3. ORGANISATION DES TOKENS POUR LE POST
+      const fsData = data.formSession;
+      let dynamicKey = null;
+      let dynamicValue = null;
+
+      // On cherche la clé fs_ dynamique (celle qui n'est pas session, timestamp ou version)
+      for (const key in fsData) {
+        if (!['fs_session', 'fs_timestamp', 'fs_version'].includes(key)) {
+          dynamicKey = key;
+          dynamicValue = fsData[key];
+          break;
+        }
+      }
+
+      // On stocke tout proprement pour postMessage
+      this.lastSessionData = {
+        ajaxToken: data.ajaxToken, // Le jeton ajax_hash
+        topicId: 0,
+        forumId: data.forum?.id || 0,
+        fs: {
+          session: fsData.fs_session,
+          timestamp: fsData.fs_timestamp,
+          version: fsData.fs_version,
+          key: dynamicKey,
+          value: dynamicValue
+        },
+        topicUrl: "https://www.jeuxvideo.com" + data.forum?.urlListTopics
+      };
+
       return {
         topics,
         currentPage: data.pagerView?.currentPage || 1,
@@ -242,6 +271,10 @@ class ForumScraper {
     const tokens = this.lastSessionData;
     if (!tokens || !tokens.fs) return { success: false, error: "Tokens manquants" };
 
+    if (!this.jvcSession) {
+        this.jvcSession = session.fromPartition('persist:jvc_session');
+      }
+
     const url = "https://www.jeuxvideo.com/forums/message/add";
 
     try {
@@ -359,6 +392,93 @@ class ForumScraper {
 
     } catch (error) {
       console.error("🔥 Erreur delete:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async postTopic(topicTitle, topicMsg) {
+    const tokens = this.lastSessionData;
+    if (!tokens || !tokens.fs) return { success: false, error: "Tokens manquants" };
+
+    if (!this.jvcSession) {
+        this.jvcSession = session.fromPartition('persist:jvc_session');
+      }
+
+    const url = "https://www.jeuxvideo.com/forums/topic/add";
+
+    try {
+      const rand1 = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
+      const rand2 = Math.floor(Math.random() * Number.MAX_SAFE_INTEGER).toString(16);
+
+      // Boundary COMPLÈTE utilisée dans le body (6 tirets comme Java)
+      const boundary = `------geckoformboundary${rand1}${rand2}`;
+      // Content-Type header = boundary.substring(2) comme WebManager.java l.112
+      const boundaryHeader = boundary.substring(2); // ← les 4 tirets
+
+      const fields = [
+        ['topicTitle', topicTitle],
+        ['submitSurvey', "false"],
+        ['answerSurvey', ""],
+        ['responsesSurvey[]', ""],
+        ['responsesSurvey[]', ""],
+        ['text', topicMsg],
+        ['topicId', "undefined"],
+        ['forumId', tokens.forumId.toString()],
+        ['group', "1"],
+        ['messageId', ""],
+        ['fs_session', tokens.fs.session],
+        ['fs_timestamp', tokens.fs.timestamp.toString()],
+        ['fs_version', tokens.fs.version],
+        [tokens.fs.key, tokens.fs.value],
+        ['ajax_hash', tokens.ajaxToken],
+      ];
+
+      console.log(fields)
+
+      let body = "";
+      for (const [name, value] of fields) {
+        body += `${boundary}\r\nContent-Disposition: form-data; name="${name}"\r\n\r\n${value}\r\n`;
+      }
+      body += `${boundary}--\r\n`;
+
+      const response = await this.jvcSession.fetch(url, {
+        method: 'POST',
+        headers: {
+          'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0",
+          'Accept': 'application/json',
+          'Accept-Language': 'fr',
+          'Content-Type': `multipart/form-data; boundary=${boundaryHeader}`, // ← 4 tirets
+          'X-Requested-With': 'XMLHttpRequest',
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache',
+          'Origin': 'https://www.jeuxvideo.com',
+          'Referer': tokens.topicUrl,
+          'Connection': 'keep-alive'
+        },
+        body: body
+      });
+
+      const resText = await response.text();
+
+      if (resText.trim().startsWith('{')) {
+        const json = JSON.parse(resText);
+
+        if (json.redirectUrl || json.status === "success") {
+          return { success: true };
+        }
+        if (json.errors && json.errors.length > 0) {
+          return { success: false, error: json.errors[0] };
+        }
+      }
+
+      if (resText.includes("Session invalide")) {
+        return { success: false, error: "Session invalide (décalage de tokens)" };
+      }
+
+      return { success: false, error: "Erreur inconnue (Réponse non JSON)" };
+
+    } catch (error) {
+      console.error("🔥 Erreur critique création topic:", error);
       return { success: false, error: error.message };
     }
   }

@@ -20,6 +20,7 @@ if (process.contextIsolated) {
       sendNativePost: (data) => ipcRenderer.invoke('send-message', data),
       deleteMessage: (deleteUrl) => ipcRenderer.invoke('delete-message', deleteUrl),
       getProfilData: (username) => ipcRenderer.invoke('get-profil', username),
+      postTopic: (data) => ipcRenderer.invoke('post-topic', data),
     })
   } catch (error) {
     console.error(error)
