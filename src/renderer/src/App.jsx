@@ -4,6 +4,7 @@ import TopicPage from './pages/TopicPage';
 import ProfilPage from './pages/ProfilPage';
 // 1. Import du store
 import { useNavigationStore } from './store/useNavigationStore';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   // 2. On récupère view et setView depuis le store global
@@ -48,12 +49,12 @@ function App() {
   const handleForumChange = (id) => {
     setForumId(id);
     setIsMenuOpen(false);
-    setView({name: 'home', data: null})
+    setView({ name: 'home', data: null })
   };
 
   if (loading) return <div style={{ color: 'white' }}>Chargement...</div>;
 
-console.log("Vue actuelle :", view);
+  console.log("Vue actuelle :", view);
 
   return (
     <div>
@@ -131,7 +132,19 @@ console.log("Vue actuelle :", view);
       {view.name === 'profil' && view.data && (
         <ProfilPage username={view.data} />
       )}
+      <Toaster
+        position="bottom-left"
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            background: '#333',
+            color: '#fff',
+            borderRadius: '10px',
+          },
+        }}
+      />
     </div>
+
   );
 }
 

@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import MessageItem from '../components/MessageItem'
 import ReplyBox from '../components/ReplyBox'
 import './TopicPage.css';
+import { toast } from 'react-hot-toast';
 
 export default function TopicPage({ topic, onBack, myUsername }) {
-  console.log(topic.url)
   const [currentUrl, setCurrentUrl] = useState(`${topic.url}`);
   const [data, setData] = useState({
     messages: [],
@@ -64,7 +64,7 @@ export default function TopicPage({ topic, onBack, myUsername }) {
       if (res.success) {
         loadMessages(currentUrl);
       } else {
-        alert("Erreur : " + res.error);
+        toast.error("Erreur : " + res.error);
       }
     } catch (err) {
       console.error(err);
@@ -79,6 +79,10 @@ export default function TopicPage({ topic, onBack, myUsername }) {
     try {
       const res = await window.api.deleteMessage(deleteUrl);
       if(res.success){
+        if(data.messages.length-1 === 0){
+          onBack()
+          return;
+        }
         
         setData(prevData => ({
           ...prevData,
@@ -86,7 +90,7 @@ export default function TopicPage({ topic, onBack, myUsername }) {
         }));
         console.log(`✅ Message ${deleteUrl} supprimé.`);
       } else {
-        alert("Erreur : " + res.error);
+        toast.error("Erreur : " + res.error);
       }
     } catch (err) {
       console.error(err);
@@ -156,8 +160,6 @@ const cleanHtmlForQuote = (html) => {
   };
 
   const { messages, pagination } = data;
-
-  console.log(pagination);
 
   return (
     <main className="wrap" style={{ padding: '20px', paddingBottom: '100px' }}>

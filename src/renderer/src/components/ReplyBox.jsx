@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import '../pages/TopicPage.css';
+import { toast } from 'react-hot-toast';
 
 const ReplyBox = ({ onSubmit, isSending, message, setMessage }) => {
   
 
   const handleSend = () => {
     if (message.trim().length < 3) {
-      alert("Message trop court !");
+      toast.error("Message trop court !");
       return;
     }
     onSubmit(message);

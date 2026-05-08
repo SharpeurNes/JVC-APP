@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import TopicItem from '../components/TopicItem'
+import toast from 'react-hot-toast';
 
 export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
   // On gère l'URL actuelle. Par défaut : page 1
@@ -53,6 +54,8 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
     setCurrentPage(1);
   }, [forumId]);
 
+  
+
   const goToPage = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > maxPage) return;
 
@@ -71,7 +74,8 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
 
   const handlePostTopic = async (messageText) => {
     if (topicMessage.trim().length < 3) {
-      alert("Message trop court !");
+      setIsCreatingTopic(false);
+      toast.error("Message trop court !");
       return;
     }
     setIsCreatingTopic(true);
@@ -92,7 +96,7 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
           }
         )
       } else {
-        alert("Erreur : " + res.error);
+        toast.error("Erreur : " + res.error);
       }
     } catch (err) {
       console.error(err);
@@ -182,13 +186,15 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
               <span className="newtopic-label">Nouveau topic</span>
             </div>
             <div className="newtopic-body">
-              <textarea id="newtopic-textarea" maxLength="100" placeholder="Titre du topic..."
+              <textarea id="newtopic-titlearea" maxLength="100" placeholder="Titre du topic..."
+                key={isCreatingTopic ? 'locked' : 'active'}
                 value={topicTitle}
                 onChange={(e) => setTopicTitle(e.target.value)}
                 disabled={isCreatingTopic}></textarea>
             </div>
             <div className="newtopic-body">
-              <textarea id="reply-textarea" maxLength="16000" placeholder="Écrire le contenu du topic..."
+              <textarea id="newtopic-textarea" maxLength="16000" placeholder="Écrire le contenu du topic..."
+                key={isCreatingTopic ? 'locked' : 'active'}
                 value={topicMessage}
                 onChange={(e) => setTopicMessage(e.target.value)}
                 disabled={isCreatingTopic}></textarea>
