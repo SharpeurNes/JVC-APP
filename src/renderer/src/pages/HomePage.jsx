@@ -79,13 +79,24 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
       const res = await window.api.postTopic({ topicTitle: topicTitle, topicMsg: topicMessage });
 
       if (res.success) {
-        alert("topic posté gg");
-        console.log(res);
+        setIsCreatingTopic(false);
+        onSelectTopic(
+          {
+            id: "",
+            title: topicTitle,
+            author: "",
+            avatar: "",
+            msgCount: "",
+            time: "",
+            url: "https://www.jeuxvideo.com" + res.json.redirectUrl,
+          }
+        )
       } else {
         alert("Erreur : " + res.error);
       }
     } catch (err) {
       console.error(err);
+      setIsCreatingTopic(false);
     } finally {
       setIsCreatingTopic(false);
     }
@@ -138,7 +149,9 @@ export default function HomePage({ cache, setCache, onSelectTopic, forumId }) {
           </div>
 
           <div className="topic-list" id="topic-list" style={{ opacity: loading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
+            {console.log(cache)}
             {cache.map((t, i) => (
+              
               <TopicItem
                 i={i}
                 key={t.id}

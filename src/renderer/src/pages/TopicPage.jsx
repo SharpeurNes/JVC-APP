@@ -4,6 +4,7 @@ import ReplyBox from '../components/ReplyBox'
 import './TopicPage.css';
 
 export default function TopicPage({ topic, onBack, myUsername }) {
+  console.log(topic.url)
   const [currentUrl, setCurrentUrl] = useState(`${topic.url}`);
   const [data, setData] = useState({
     messages: [],

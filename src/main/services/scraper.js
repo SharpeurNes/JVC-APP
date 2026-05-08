@@ -5,7 +5,8 @@ class ForumScraper {
   constructor() {
     this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36';
     this.jvcSession = null;
-    this.lastSessionData = null;
+    this.topicSessionData = null;
+    this.listTopicSessionData = null;
   }
 
   init(ua) {
@@ -23,31 +24,27 @@ class ForumScraper {
     return newUrl;
   }
 
-  async getTopicList(url) {
-    try {
-      const res = await net.fetch(this.toApiUrl(url));
-      const data = await res.json();
+async getTopicList(url) {
+  try {
+    if (!this.jvcSession) {
+      this.jvcSession = session.fromPartition('persist:jvc_session');
+    }
 
-      console.log(data.forum?.name + " " + data.pagerView?.currentPage);
+    const wwwUrl = url.replace('api.jeuxvideo.com', 'www.jeuxvideo.com');
 
-      console.log(this.toApiUrl(url));
+    const [apiRes, htmlRes] = await Promise.all([
+      this.jvcSession.fetch(this.toApiUrl(wwwUrl), { method: 'GET', headers: { 'User-Agent': this.userAgent } }),
+      this.jvcSession.fetch(wwwUrl, { method: 'GET', headers: { 'User-Agent': this.userAgent } })
+    ]);
 
-      const topics = (data.listTopics || []).map(t => ({
-        id: t.id,
-        title: t.title,
-        author: t.author ? t.author.pseudo : "Anonyme",
-        avatar: t.author ? t.author.avatarUrl : "",
-        msgCount: t.responsesCount,
-        time: t.lastMessageDate,
-        url: t.url ? (t.url.startsWith('http') ? t.url : 'https://www.jeuxvideo.com' + t.url) : ""
-      }));
+    const [data, html] = await Promise.all([apiRes.json(), htmlRes.text()]);
 
-      // 3. ORGANISATION DES TOKENS POUR LE POST
-      const fsData = data.formSession;
-      let dynamicKey = null;
-      let dynamicValue = null;
-
-      // On cherche la clé fs_ dynamique (celle qui n'est pas session, timestamp ou version)
+    const pattern = /window\.jvc\.forumsAppPayload\s*=\s*"([^"]*)"/;
+    const match = html.match(pattern);
+    if (match) {
+      const payload = JSON.parse(Buffer.from(match[1], 'base64').toString('utf-8'));
+      const fsData = payload.formSession;
+      let dynamicKey = null, dynamicValue = null;
       for (const key in fsData) {
         if (!['fs_session', 'fs_timestamp', 'fs_version'].includes(key)) {
           dynamicKey = key;
@@ -55,10 +52,8 @@ class ForumScraper {
           break;
         }
       }
-
-      // On stocke tout proprement pour postMessage
-      this.lastSessionData = {
-        ajaxToken: data.ajaxToken, // Le jeton ajax_hash
+      this.listTopicSessionData = {
+        ajaxToken: payload.ajaxToken,
         topicId: 0,
         forumId: data.forum?.id || 0,
         fs: {
@@ -68,26 +63,38 @@ class ForumScraper {
           key: dynamicKey,
           value: dynamicValue
         },
-        topicUrl: "https://www.jeuxvideo.com" + data.forum?.urlListTopics
+        topicUrl: wwwUrl
       };
-
-      return {
-        topics,
-        currentPage: data.pagerView?.currentPage || 1,
-        maxPage: data.pagerView?.pageCount || 1,
-        forumName: data.forum?.name,
-      };
-    } catch (e) {
-      console.error("Erreur scraper topics:", e);
-      return { topics: [], currentPage: 1 };
     }
+
+    const topics = (data.listTopics || []).map(t => ({
+      id: t.id,
+      title: t.title,
+      author: t.author ? t.author.pseudo : "Anonyme",
+      avatar: t.author ? t.author.avatarUrl : "",
+      msgCount: t.responsesCount,
+      time: t.lastMessageDate,
+      url: t.url ? (t.url.startsWith('http') ? t.url : 'https://www.jeuxvideo.com' + t.url) : ""
+    }));
+
+    return {
+      topics,
+      currentPage: data.pagerView?.currentPage || 1,
+      maxPage: data.pagerView?.pageCount || 1,
+      forumName: data.forum?.name,
+    };
+  } catch (e) {
+    console.error("Erreur scraper topics:", e);
+    return { topics: [], currentPage: 1 };
   }
+}
 
   async getTopicMessages(url) {
     try {
       let targetUrl = url;
 
       targetUrl = url.replace('api.jeuxvideo.com', 'www.jeuxvideo.com');
+
       if (targetUrl.includes('format=json')) {
         targetUrl = targetUrl.replace(/[?&]format=json/g, '');
       }
@@ -144,7 +151,7 @@ class ForumScraper {
       }
 
       // On stocke tout proprement pour postMessage
-      this.lastSessionData = {
+      this.topicSessionData = {
         ajaxToken: data.ajaxToken, // Le jeton ajax_hash
         topicId: topicId || 0,
         forumId: forumId || 0,
@@ -158,7 +165,7 @@ class ForumScraper {
         topicUrl: targetUrl
       };
 
-      console.log(data.listMessage)
+      //console.log(data.listMessage)
 
       // On prépare les messages pour ton interface
       const messages = (data.listMessage || []).map(msg => ({
@@ -178,12 +185,12 @@ class ForumScraper {
 
       return {
         messages,
-        topicId: this.lastSessionData.topicId,
+        topicId: this.topicSessionData.topicId,
         pagination: {
           current: data.pagerView?.currentPage || 1,
           max: data.pagerView?.pageCount || 1
         },
-        sessionData: this.lastSessionData
+        sessionData: this.topicSessionData
       };
 
     } catch (error) {
@@ -268,7 +275,7 @@ class ForumScraper {
   }
 
   async postMessage(messageText) {
-    const tokens = this.lastSessionData;
+    const tokens = this.topicSessionData;
     if (!tokens || !tokens.fs) return { success: false, error: "Tokens manquants" };
 
     if (!this.jvcSession) {
@@ -350,7 +357,7 @@ class ForumScraper {
 
 
   async deleteMessage(deleteUrl, messageId) {
-    const tokens = this.lastSessionData;
+    const tokens = this.topicSessionData;
     if (!tokens || !tokens.ajaxToken) return { success: false, error: "Tokens manquants" };
     console.log(deleteUrl);
 
@@ -397,7 +404,7 @@ class ForumScraper {
   }
 
   async postTopic(topicTitle, topicMsg) {
-    const tokens = this.lastSessionData;
+    const tokens = this.listTopicSessionData;
     if (!tokens || !tokens.fs) return { success: false, error: "Tokens manquants" };
 
     if (!this.jvcSession) {
@@ -419,13 +426,12 @@ class ForumScraper {
         ['topicTitle', topicTitle],
         ['submitSurvey', "false"],
         ['answerSurvey', ""],
-        ['responsesSurvey[]', ""],
-        ['responsesSurvey[]', ""],
+        ['responsesSurvey[]', "\r\n"],
         ['text', topicMsg],
-        ['topicId', "undefined"],
+        ['topicId', "0"],
         ['forumId', tokens.forumId.toString()],
         ['group', "1"],
-        ['messageId', ""],
+        ['messageId', "null"],
         ['fs_session', tokens.fs.session],
         ['fs_timestamp', tokens.fs.timestamp.toString()],
         ['fs_version', tokens.fs.version],
@@ -464,7 +470,8 @@ class ForumScraper {
         const json = JSON.parse(resText);
 
         if (json.redirectUrl || json.status === "success") {
-          return { success: true };
+          console.log(json);
+          return { success: true, json: json };
         }
         if (json.errors && json.errors.length > 0) {
           return { success: false, error: json.errors[0] };
