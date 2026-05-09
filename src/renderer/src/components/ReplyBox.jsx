@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import '../pages/TopicPage.css';
 import { toast } from 'react-hot-toast';
+import StickersBank from './StickersBank.jsx';
 
 const ReplyBox = ({ onSubmit, isSending, message, setMessage }) => {
   
@@ -20,6 +21,8 @@ const ReplyBox = ({ onSubmit, isSending, message, setMessage }) => {
       <div className="reply-top">
         <span className="reply-label">Répondre à ce sujet</span>
       </div>
+      <StickersBank onStickerClick={(sticker) => setMessage(prev => prev + ' ' + sticker + ' ')} />
+
       <div className="reply-body">
         <textarea id="reply-textarea"  maxLength="16000" placeholder="Écrire votre réponse..."
         value={message}

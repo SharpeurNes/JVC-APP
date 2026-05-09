@@ -6,7 +6,22 @@ const icoCite = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stro
 const icoBlock = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>`;
 const icoFlag = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>`;
 
+export function processJvcContent(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
 
+  doc.querySelectorAll('span[class*="JvCare"]').forEach(span => {
+    const text = span.textContent.trim();
+    const a = doc.createElement('a');
+    a.href = text.startsWith('http') ? text : 'https://' + text;
+    a.textContent = text;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    span.replaceWith(a);
+  });
+
+  return doc.body.innerHTML;
+}
 
 export default function MessageItem({ msg, isUser, onDelete, onQuote }) {
   
@@ -19,6 +34,8 @@ export default function MessageItem({ msg, isUser, onDelete, onQuote }) {
   const handleEdit = () => {
     onQuote(msg.content, msg.author, msg.date)
   }
+
+  
 
   return (
     
@@ -40,7 +57,7 @@ export default function MessageItem({ msg, isUser, onDelete, onQuote }) {
             </div>
             <span className="msg-date">{msg.date}</span>
           </div>
-          
+        
           
           <div className="msg-tools">
             <button className="tool-btn" title="Citer" onClick={handleEdit}>C</button>
@@ -51,7 +68,7 @@ export default function MessageItem({ msg, isUser, onDelete, onQuote }) {
             
           </div>
         </div>
-        <div className="msg-body" dangerouslySetInnerHTML={{ __html: msg.content }} style={{ lineHeight: '1.4' }} />
+        <div className="msg-body" dangerouslySetInnerHTML={{ __html: processJvcContent(msg.content) }} style={{ lineHeight: '1.4' }} />
 
       </div>
     </div>
